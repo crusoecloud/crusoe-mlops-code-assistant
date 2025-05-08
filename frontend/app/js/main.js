@@ -5,10 +5,9 @@ document.addEventListener('DOMContentLoaded', () => {
             .addEventListener('click', copyCode);
   });
   
-
+  // This function will be deleted in the future as it was created for testing purposes only
   async function getCodeFromOpenAI(prompt) {
     // Provide your own API key here
-    // Will not be used in the future
     const OPENAI_API_KEY = 'api_key';
 
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
