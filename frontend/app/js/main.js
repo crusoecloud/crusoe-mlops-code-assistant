@@ -5,6 +5,45 @@ document.addEventListener('DOMContentLoaded', () => {
             .addEventListener('click', copyCode);
   });
   
+
+  async function getCodeFromOpenAI(prompt) {
+    // Provide your own API key here
+    // Will not be used in the future
+    const OPENAI_API_KEY = 'api_key';
+
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method:  'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model:       'gpt-4',
+        messages: [
+          {
+            role:    'system',
+            content: 'You are a Python coding assistant. Return only valid Python code without any explanations or formatting.'
+          },
+          {
+            role:    'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.2,
+        max_tokens: 1500,
+        n:          1
+      })
+    });
+
+    if (!res.ok) {
+      const errBody = await res.text();
+      throw new Error(`OpenAI API error ${res.status}: ${errBody}`);
+    }
+
+    const data = await res.json();
+    return data.choices[0].message.content;
+  }
+
   async function generateCode() {
     const promptEl = document.getElementById('prompt');
     const loading  = document.getElementById('loading');
@@ -23,18 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.disabled = true;
   
     try {
-      const res = await fetch('https://api.yourdomain.com/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer YOUR_API_KEY'
-        },
-        body: JSON.stringify({ prompt })
-      });
-      if (!res.ok) throw new Error(`API returned ${res.status}`);
-      const { code } = await res.json();
-  
-      // Escape & inject
+      const code = await getCodeFromOpenAI(prompt);
+      // Escape HTML
       const escaped = code
         .replace(/&/g,'&amp;')
         .replace(/</g,'&lt;')
