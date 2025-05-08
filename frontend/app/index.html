@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NovaCode – AI-Powered Development Assistant</title>
+
+  <!-- Our CSS + Prism theme -->
+  <link rel="stylesheet" href="css/styles.css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+</head>
+<body>
+
+  <div class="ide-header">
+    <div class="logo">
+      <div class="logo-icon">N</div>
+      NovaCode
+    </div>
+  </div>
+
+  <div class="ide-container">
+    <aside class="sidebar">
+      <div class="file-tree">
+        <div class="file-tree-header">Explorer</div>
+        <div class="file-item active">📝 Unsaved</div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <section class="prompt-section">
+        <header class="prompt-header">
+          <div class="prompt-title">AI Assistant</div>
+        </header>
+        <textarea
+          id="prompt"
+          class="prompt-input"
+          placeholder="Describe the code you want to generate…"></textarea>
+        <div class="prompt-footer">
+          <button id="btn-generate" class="generate-btn">
+            🔄 Generate Code
+          </button>
+        </div>
+      </section>
+
+      <section class="results-section">
+        <header class="results-header">
+          <div class="results-title">Generated Code</div>
+          <button id="btn-copy" class="generate-btn small">
+            📋 Copy Code
+          </button>
+        </header>
+        <div id="loading" class="loading">Generating code</div>
+        <pre id="generatedCode" class="code-block"></pre>
+      </section>
+    </main>
+  </div>
+
+  <footer class="status-bar">
+    <div class="status-item">
+      <div class="status-indicator"></div>
+      <span>AI Assistant Ready</span>
+    </div>
+    <div class="status-item">NovaCode v1.0.0</div>
+  </footer>
+
+  <!-- Prism & our JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
