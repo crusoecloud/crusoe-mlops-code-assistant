@@ -6,15 +6,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   // This function will be deleted in the future as it was created for testing purposes only
-  async function getCodeFromOpenAI(prompt) {
-    // Provide your own API key here
-    const OPENAI_API_KEY = 'api_key';
-
+  async function getCodeFromOpenAI(prompt, apiKey) {
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
       method:  'POST',
       headers: {
         'Content-Type':  'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`
+        'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
         model:       'gpt-4',
@@ -43,6 +40,21 @@ document.addEventListener('DOMContentLoaded', () => {
     return data.choices[0].message.content;
   }
 
+  // Function to return a static code sample
+  function getStaticCodeSample() {
+    return `class EmptyClass:
+    """
+    This is a static code sample that would normally be generated based on your prompt.
+    """
+
+    def method1(self):
+        pass
+
+    def method2(self):
+        pass
+`;
+  }
+
   async function generateCode() {
     const promptEl = document.getElementById('prompt');
     const loading  = document.getElementById('loading');
@@ -59,9 +71,22 @@ document.addEventListener('DOMContentLoaded', () => {
     loading.style.display = 'block';
     codeEl.style.display = 'none';
     btn.disabled = true;
-  
+
+    // Provide your own API key here
+    const OPENAI_API_KEY = '';
+
     try {
-      const code = await getCodeFromOpenAI(prompt);
+      let code;
+
+      // Check if API key is provided
+      if (!OPENAI_API_KEY) {
+        // Return a static code sample if no API key is available
+        code = getStaticCodeSample();
+      } else {
+        // Get code from OpenAI if API key is available
+        code = await getCodeFromOpenAI(prompt, OPENAI_API_KEY);
+      }
+
       // Escape HTML
       const escaped = code
         .replace(/&/g,'&amp;')
