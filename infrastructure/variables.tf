@@ -9,7 +9,16 @@ variable "subnet_id" {
   default     = "abcdefhijklmnopqrstuvwxyz01234567890"
 }
 
-
+variable "vpc_network_id" {
+  description = "Id of the VPC network."
+  type        = string
+  default     = "abcdefhijklmnopqrstuvwxyz01234567890"
+}
+variable "vpc_network_cidr" {
+  description = "CIDR block for the VPC network."
+  type        = string
+  default     = ""
+}
 variable "cluster_name" {
   description = "Name for the Kubernetes cluster."
   type        = string
@@ -21,6 +30,14 @@ variable "cluster_location" {
   type        = string
 }
 
+variable "whitelist_ip" {
+  description = "List of IP addresses to whitelist for access."
+  type = list(object({
+    id      = string
+    address = string
+  }))
+  default = []
+}
 variable "cluster_version" {
   description = "Kubernetes version for the cluster and node pool."
   type        = string
