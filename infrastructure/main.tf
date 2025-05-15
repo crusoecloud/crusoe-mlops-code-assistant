@@ -45,5 +45,5 @@ resource "crusoe_vpc_firewall_rule" "allow_ray_dashboard" {
   source            = each.value.address
   source_ports      = ""
   destination       = var.vpc_network_cidr
-  destination_ports = "30865, 30080, 30866"
+  destination_ports = "30865, 30080, 30866, 30870"
 }
