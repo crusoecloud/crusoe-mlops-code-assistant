@@ -7,5 +7,3 @@ docker push registry.gitlab.com/deepsense.ai/g-crusoe/crusoe-novacode/ray-ml-vll
 
 kubectl --context $CTX -n $NS apply -f serve_vllm.yaml
 
-kubectl create secret docker-registry regcred --docker-server=registry.gitlab.com --docker-username=MichaelJamesMcCulloch --docker-password=glpat-mjNd21iXs4RdeXo7Ujwh 
-glpat-mjNd21iXs4RdeXo7Ujwh

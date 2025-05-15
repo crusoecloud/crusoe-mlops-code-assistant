@@ -1,123 +1,92 @@
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('btn-generate')
-            .addEventListener('click', generateCode);
-    document.getElementById('btn-copy')
-            .addEventListener('click', copyCode);
+  document.getElementById('btn-generate')
+          .addEventListener('click', generateCode);
+  document.getElementById('btn-copy')
+          .addEventListener('click', copyCode);
+});
+
+async function getLlamaCompletion(prompt) {
+  const res = await fetch('/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: "meta-llama/Llama-3.2-1B-Instruct",
+      messages: [
+        {
+          role: "system",
+          content: "You are a coding assistant. Return ONLY valid code without any explanations, comments, or text. If not indicated otherwise, use Python."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      max_tokens: 1500,
+      stream: false
+    })
   });
-  
-  // This function will be deleted in the future as it was created for testing purposes only
-  async function getCodeFromOpenAI(prompt, apiKey) {
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method:  'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model:       'gpt-4',
-        messages: [
-          {
-            role:    'system',
-            content: 'You are a Python coding assistant. Return only valid Python code without any explanations or formatting.'
-          },
-          {
-            role:    'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.2,
-        max_tokens: 1500,
-        n:          1
-      })
-    });
 
-    if (!res.ok) {
-      const errBody = await res.text();
-      throw new Error(`OpenAI API error ${res.status}: ${errBody}`);
-    }
-
-    const data = await res.json();
-    return data.choices[0].message.content;
+  if (!res.ok) {
+    const errBody = await res.text();
+    throw new Error(`API error ${res.status}: ${errBody}`);
   }
 
-  // Function to return a static code sample
-  function getStaticCodeSample() {
-    return `class EmptyClass:
-    """
-    This is a static code sample that would normally be generated based on your prompt.
-    """
+  const data = await res.json();
+  return data.choices[0].message.content;
+}
 
-    def method1(self):
-        pass
+async function generateCode() {
+  const promptEl = document.getElementById('prompt');
+  const loading  = document.getElementById('loading');
+  const codeEl   = document.getElementById('generatedCode');
+  const btn      = document.getElementById('btn-generate');
+  const prompt   = promptEl.value.trim();
 
-    def method2(self):
-        pass
-`;
+  if (!prompt) {
+    alert('Please enter a prompt first');
+    return;
   }
 
-  async function generateCode() {
-    const promptEl = document.getElementById('prompt');
-    const loading  = document.getElementById('loading');
-    const codeEl   = document.getElementById('generatedCode');
-    const btn      = document.getElementById('btn-generate');
-    const prompt   = promptEl.value.trim();
-  
-    if (!prompt) {
-      alert('Please enter a prompt first');
-      return;
-    }
-  
-    // Show loading
-    loading.style.display = 'block';
-    codeEl.style.display = 'none';
-    btn.disabled = true;
+  // Show loading
+  loading.style.display = 'block';
+  codeEl.style.display = 'none';
+  btn.disabled = true;
 
-    // Provide your own API key here
-    const OPENAI_API_KEY = '';
+  try {
+    const code = await getLlamaCompletion(prompt);
 
-    try {
-      let code;
+    // Escape HTML
+    const escaped = code
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;');
 
-      // Check if API key is provided
-      if (!OPENAI_API_KEY) {
-        // Return a static code sample if no API key is available
-        code = getStaticCodeSample();
-      } else {
-        // Get code from OpenAI if API key is available
-        code = await getCodeFromOpenAI(prompt, OPENAI_API_KEY);
-      }
+    codeEl.innerHTML = `<code class="language-python">${escaped}</code>`;
+    Prism.highlightElement(codeEl.firstChild);
 
-      // Escape HTML
-      const escaped = code
-        .replace(/&/g,'&amp;')
-        .replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;');
-  
-      codeEl.innerHTML = `<code class="language-python">${escaped}</code>`;
-      Prism.highlightElement(codeEl.firstChild);
-  
-    } catch (err) {
-      codeEl.innerHTML = `<div style="color: #fa5252">
-        Error: ${err.message}
-      </div>`;
-    } finally {
-      loading.style.display = 'none';
-      codeEl.style.display = 'block';
-      btn.disabled = false;
-    }
+  } catch (err) {
+    codeEl.innerHTML = `<div style="color: #fa5252">
+      Error: ${err.message}
+    </div>`;
+  } finally {
+    loading.style.display = 'none';
+    codeEl.style.display = 'block';
+    btn.disabled = false;
   }
-  
-  function copyCode() {
-    const codeEl = document.getElementById('generatedCode');
-    const ta     = document.createElement('textarea');
-    ta.value     = codeEl.textContent;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-  
-    const btn = document.getElementById('btn-copy');
-    btn.textContent = 'Copied!';
-    setTimeout(() => btn.textContent = '📋 Copy Code', 2000);
-  }
-  
+}
+
+function copyCode() {
+  const codeEl = document.getElementById('generatedCode');
+  const ta     = document.createElement('textarea');
+  ta.value     = codeEl.textContent;
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+
+  const btn = document.getElementById('btn-copy');
+  btn.textContent = 'Copied!';
+  setTimeout(() => btn.textContent = '📋 Copy Code', 2000);
+}
