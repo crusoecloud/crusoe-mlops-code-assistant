@@ -1,0 +1,61 @@
+apiVersion: ray.io/v1
+kind: RayJob
+metadata:
+  name: lora-train-job
+spec:
+  entrypoint: "bash /home/ray/app/train.sh"
+
+  runtimeEnvYAML: |
+    pip:
+      - "-r /home/ray/app/requirements.txt"
+
+  shutdownAfterJobFinishes: true
+  ttlSecondsAfterFinished: 120
+
+  rayClusterSpec:
+    headGroupSpec:
+      rayStartParams:
+        dashboard-host: "0.0.0.0"
+      template:
+        spec:
+          volumes:
+            - name: src
+              configMap:
+                name: lora-train-src
+          containers:
+            - name: head
+              image: rayproject/ray-ml:2.33.0.914af0-py311
+              workingDir: /home/ray/app
+              envFrom:
+                - configMapRef: {name: lora-train-cfg-default}
+                - configMapRef: {name: lora-train-cfg-local}   # overrides duplicates
+              volumeMounts:
+                - name: src
+                  mountPath: /home/ray/app
+              resources:
+                limits:   {cpu: "4", memory: "8Gi"}
+                requests: {cpu: "4", memory: "8Gi"}
+
+    workerGroupSpecs:
+      - groupName: gpu-workers
+        rayStartParams: {}
+        replicas: 1
+        template:
+          spec:
+            volumes:
+              - name: src
+                configMap:
+                  name: lora-train-src
+            containers:
+              - name: worker
+                image: rayproject/ray-ml:2.33.0.914af0-py311
+                workingDir: /home/ray/app
+                envFrom:
+                  - configMapRef: {name: lora-train-cfg-default}
+                  - configMapRef: {name: lora-train-cfg-local}
+                volumeMounts:
+                  - name: src
+                    mountPath: /home/ray/app
+                resources:
+                  limits:   {cpu: "8", memory: "64Gi", nvidia.com/gpu: 1}
+                  requests: {cpu: "8", memory: "64Gi", nvidia.com/gpu: 1}
