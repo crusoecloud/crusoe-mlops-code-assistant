@@ -28,13 +28,19 @@ spec:
               workingDir: /home/ray/app
               envFrom:
                 - configMapRef: {name: lora-train-cfg-default}
-                - configMapRef: {name: lora-train-cfg-local}   # overrides duplicates
+                - configMapRef: {name: lora-train-cfg-local}   
+              env:
+                - name: HF_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: hf-secret
+                      key: hf_api_token
               volumeMounts:
                 - name: src
                   mountPath: /home/ray/app
               resources:
-                limits:   {cpu: "4", memory: "8Gi"}
-                requests: {cpu: "4", memory: "8Gi"}
+                limits:   {cpu: "1", memory: "128Gi"}
+                requests: {cpu: "1", memory: "128Gi"}
 
     workerGroupSpecs:
       - groupName: gpu-workers
@@ -53,9 +59,15 @@ spec:
                 envFrom:
                   - configMapRef: {name: lora-train-cfg-default}
                   - configMapRef: {name: lora-train-cfg-local}
+                env:
+                  - name: HF_TOKEN
+                    valueFrom:
+                      secretKeyRef:
+                        name: hf-secret
+                        key: hf_api_token
                 volumeMounts:
                   - name: src
                     mountPath: /home/ray/app
                 resources:
-                  limits:   {cpu: "8", memory: "64Gi", nvidia.com/gpu: 1}
-                  requests: {cpu: "8", memory: "64Gi", nvidia.com/gpu: 1}
+                  limits:   {cpu: "1", memory: "128Gi", nvidia.com/gpu: 1}
+                  requests: {cpu: "1", memory: "128Gi", nvidia.com/gpu: 1}
