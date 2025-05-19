@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ray-metrics
+  namespace: default
+  labels:
+    app: ray-cluster
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+spec:
+  ports:
+  - port: 8080
+    name: metrics
+    protocol: TCP
+  selector:
+    ray.io/node-type: head 

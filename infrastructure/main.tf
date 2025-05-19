@@ -27,9 +27,23 @@ resource "crusoe_kubernetes_node_pool" "gpu_nodepool" {
   project_id     = var.project_id
   name           = var.nodepool_name
   cluster_id     = crusoe_kubernetes_cluster.gpu_cluster.id
-  instance_count = 1
+  instance_count = 2
   type           = var.nodepool_instance_type
   ssh_key        = var.ssh_public_key
   subnet_id      = var.subnet_id
   version        = var.nodepool_version # Ensure node pool K8s version matches cluster
+}
+
+
+resource "crusoe_vpc_firewall_rule" "allow_ray_dashboard" {
+  for_each          = { for ip in var.whitelist_ip : ip.id => ip }
+  network           = var.vpc_network_id
+  name              = "allow-ray-dashboard-${each.key}"
+  action            = "allow"
+  direction         = "ingress"
+  protocols         = "tcp"
+  source            = each.value.address
+  source_ports      = ""
+  destination       = var.vpc_network_cidr
+  destination_ports = "30865, 30080, 30866, 30870"
 }
