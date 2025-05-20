@@ -1,8 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-generate')
           .addEventListener('click', generateCode);
-  document.getElementById('btn-copy')
-          .addEventListener('click', copyCode);
 });
 
 async function getLlamaCompletion(prompt) {
