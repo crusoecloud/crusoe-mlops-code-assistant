@@ -8,8 +8,21 @@
   <!-- Our CSS + Prism theme -->
   <link rel="stylesheet" href="css/styles.css" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
+
+  <div class="menu-bar">
+    <div class="menu-item">File</div>
+    <div class="menu-item">Edit</div>
+    <div class="menu-item">Selection</div>
+    <div class="menu-item">View</div>
+    <div class="menu-item">Go</div>
+    <div class="menu-item">Run</div>
+    <div class="menu-item">Terminal</div>
+    <div class="menu-item">Window</div>
+    <div class="menu-item">Help</div>
+  </div>
 
   <div class="ide-header">
     <div class="logo">
@@ -21,37 +34,65 @@
   <div class="ide-container">
     <aside class="sidebar">
       <div class="file-tree">
-        <div class="file-tree-header">Explorer</div>
-        <div class="file-item active">📝 Unsaved</div>
+        <div class="file-tree-header">
+          <span>Explorer</span>
+          <button class="new-file-btn" title="New File">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+        <div class="file-item active">
+          New file
+          <button class="close-btn" title="Close">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </aside>
 
     <main class="main-content">
-      <section class="prompt-section">
-        <header class="prompt-header">
-          <div class="prompt-title">AI Assistant</div>
-        </header>
-        <textarea
-          id="prompt"
-          class="prompt-input"
-          placeholder="Describe the code you want to generate…"></textarea>
-        <div class="prompt-footer">
-          <button id="btn-generate" class="generate-btn">
-            🔄 Generate Code
-          </button>
+      <div class="editor-section">
+        <div class="tabs">
+          <div class="tab active">
+            New file
+            <button class="close-btn" title="Close">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
         </div>
-      </section>
 
-      <section class="results-section">
-        <header class="results-header">
-          <div class="results-title">Generated Code</div>
-          <button id="btn-copy" class="generate-btn small">
-            📋 Copy Code
-          </button>
+        <div class="editor-container">
+          <div class="editor-content">
+            <div class="line-numbers"></div>
+            <pre id="generatedCode" class="code-block"></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-section">
+        <header class="chat-header">
+          <div class="chat-title">AI Assistant</div>
         </header>
-        <div id="loading" class="loading">Generating code</div>
-        <pre id="generatedCode" class="code-block"></pre>
-      </section>
+        <div class="chat-content">
+          <div class="chat-messages"></div>
+          <div class="chat-input-container">
+            <textarea
+              id="prompt"
+              class="prompt-input"
+              placeholder="Ask me anything about your code..."></textarea>
+            <button id="btn-generate" class="generate-btn">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2 8L14 8M14 8L8 2M14 8L8 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 
