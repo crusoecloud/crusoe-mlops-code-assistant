@@ -74,17 +74,3 @@ async function generateCode() {
     btn.disabled = false;
   }
 }
-
-function copyCode() {
-  const codeEl = document.getElementById('generatedCode');
-  const ta     = document.createElement('textarea');
-  ta.value     = codeEl.textContent;
-  document.body.appendChild(ta);
-  ta.select();
-  document.execCommand('copy');
-  document.body.removeChild(ta);
-
-  const btn = document.getElementById('btn-copy');
-  btn.textContent = 'Copied!';
-  setTimeout(() => btn.textContent = '📋 Copy Code', 2000);
-}
