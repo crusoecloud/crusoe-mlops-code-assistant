@@ -97,20 +97,14 @@ function addMessageToChat(role, content) {
   const messageEl = document.createElement('div');
   messageEl.className = `chat-message ${role}`;
 
-  // For assistant messages, try to format code with syntax highlighting
-  let formattedContent = content;
+  // Process content to render code blocks and regular text
+  let formattedContent = '';
 
-  if (role === 'assistant' && isProbablyCode(content)) {
-    // Create a code element with Prism syntax highlighting
-    const tempElement = document.createElement('div');
-    tempElement.innerHTML = `<pre><code class="language-python">${escapeHtml(content)}</code></pre>`;
-
-    // Apply Prism highlighting
-    Prism.highlightElement(tempElement.querySelector('code'));
-
-    formattedContent = tempElement.innerHTML;
+  if (role === 'assistant') {
+    // Process markdown code blocks
+    formattedContent = processCodeBlocks(content);
   } else {
-    // Regular text - just ensure newlines and indentation are preserved
+    // For user messages, just ensure newlines and indentation are preserved
     formattedContent = content
       .replace(/\n/g, '<br>')
       .replace(/  /g, '&nbsp;&nbsp;');
@@ -127,6 +121,72 @@ function addMessageToChat(role, content) {
   chatHistory.push({ role, content });
 }
 
+// Process markdown code blocks with ```
+function processCodeBlocks(text) {
+  // If no code block markers, just format text normally
+  if (!text.includes('```')) {
+    return text.replace(/\n/g, '<br>').replace(/  /g, '&nbsp;&nbsp;');
+  }
+
+  let result = '';
+  let lastIndex = 0;
+
+  // Regular expression to match code blocks with or without language specifier
+  // ```language
+  // code
+  // ```
+  // OR
+  // ```
+  // code
+  // ```
+  const regex = /```(?:(\w+)\n)?([\s\S]*?)```/g;
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    // Add text before the code block
+    if (match.index > lastIndex) {
+      const textBefore = text.substring(lastIndex, match.index);
+      result += formatPlainText(textBefore);
+    }
+
+    // Get language (if specified) and code content
+    const language = match[1] || 'python'; // Default to Python if no language specified
+    const code = match[2];
+
+    // Format code with syntax highlighting
+    result += formatCodeBlock(code, language);
+
+    lastIndex = regex.lastIndex;
+  }
+
+  // Add any remaining text after the last code block
+  if (lastIndex < text.length) {
+    result += formatPlainText(text.substring(lastIndex));
+  }
+
+  return result;
+}
+
+// Helper function to format regular text
+function formatPlainText(text) {
+  return text.replace(/\n/g, '<br>').replace(/  /g, '&nbsp;&nbsp;');
+}
+
+// Helper function to format and highlight code
+function formatCodeBlock(code, language) {
+  const tempElement = document.createElement('div');
+  tempElement.innerHTML = `<pre><code class="language-${language}">${escapeHtml(code)}</code></pre>`;
+
+  try {
+    // Apply Prism highlighting
+    Prism.highlightElement(tempElement.querySelector('code'));
+  } catch (error) {
+    console.error('Error highlighting code:', error);
+  }
+
+  return tempElement.innerHTML;
+}
+
 // Helper function to escape HTML entities
 function escapeHtml(text) {
   return text
@@ -135,23 +195,6 @@ function escapeHtml(text) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
-}
-
-// Simple heuristic to check if content is likely code
-function isProbablyCode(text) {
-  // Look for Python-like syntax
-  const codePatterns = [
-    /def\s+\w+\s*\(/,    // function definition
-    /class\s+\w+/,       // class definition
-    /import\s+\w+/,      // import statement
-    /for\s+\w+\s+in\s+/, // for loop
-    /if\s+.+:/,          // if statement
-    /^\s*return\s+/m,    // return statement
-    /^\s*#/m,            // Python comment
-    /=\s*[{\[]/          // dictionary or list assignment
-  ];
-
-  return codePatterns.some(pattern => pattern.test(text));
 }
 
 async function generateCode() {
