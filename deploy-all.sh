@@ -10,9 +10,16 @@ echo -e "${BLUE}===== Starting deployment of all components =====${NC}"
 
 # Ray Cluster deployment
 echo -e "${GREEN}Deploying kubernetes...${NC}"
+# (
+#     cd infrastructure
+#     terraform apply -auto-approve
+# )
 (
-    cd infrastructure
-    terraform apply -auto-approve
+    NS=default
+    CTX=nova-cluster
+
+    cd kubernetes/
+    crusoe kubernetes clusters get-credentials "$CTX" --yes
 )
 echo -e "${GREEN}Ray Cluster deployment completed${NC}\n"
 
