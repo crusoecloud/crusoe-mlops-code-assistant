@@ -1,8 +1,8 @@
 #!/bin/bash
 
+set -euo pipefail
 # Build and push the image
-docker build -t registry.gitlab.com/deepsense.ai/g-crusoe/crusoe-novacode/novacode-front:latest frontend
-docker push registry.gitlab.com/deepsense.ai/g-crusoe/crusoe-novacode/novacode-front:latest
+docker buildx build --platform linux/amd64 -t registry.gitlab.com/deepsense.ai/g-crusoe/crusoe-novacode/novacode-front:latest frontend --push
 
 # Reload the deployment
 kubectl rollout restart deployment frontend-deployment

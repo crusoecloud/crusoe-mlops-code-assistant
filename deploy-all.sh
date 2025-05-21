@@ -9,6 +9,15 @@ NC='\033[0m' # No Color
 echo -e "${BLUE}===== Starting deployment of all components =====${NC}"
 
 # Ray Cluster deployment
+echo -e "${GREEN}Deploying kubernetes...${NC}"
+(
+    cd infrastructure
+    terraform apply -auto-approve
+)
+echo -e "${GREEN}Ray Cluster deployment completed${NC}\n"
+
+
+# Ray Cluster deployment
 echo -e "${GREEN}Deploying Ray Cluster...${NC}"
 ./kubernetes/ray-cluster/deploy.sh
 echo -e "${GREEN}Ray Cluster deployment completed${NC}\n"
