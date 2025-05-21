@@ -27,5 +27,5 @@ kubectl create configmap lora-train-src \
   --from-file=app 
 
 # -------- job ----------------------------------------------------------
-kubectl delete --context "$CTX" -n "$NS" -f rayjob.yaml
+kubectl delete --context "$CTX" -n "$NS" -f rayjob.yaml                   --ignore-not-found
 kubectl apply --context "$CTX" -n "$NS" -f rayjob.yaml

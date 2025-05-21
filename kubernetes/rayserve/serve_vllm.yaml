@@ -71,8 +71,6 @@ spec:
                 cpu: "2"
                 memory: "8Gi"
                 nvidia.com/gpu: "2"
-            imagePullSecrets:
-            - name: regcred
             env:
             - name: CUDA_VISIBLE_DEVICES
               value: "0,1"
@@ -81,6 +79,8 @@ spec:
                 secretKeyRef:
                   name: hf-secret
                   key: hf_api_token
+          imagePullSecrets:
+          - name: gitlab-registry
     workerGroupSpecs:
     - replicas: 1
       minReplicas: 0
@@ -101,8 +101,6 @@ spec:
                 cpu: "8"
                 memory: "20Gi"
                 nvidia.com/gpu: "2"
-            imagePullSecrets:
-            - name: regcred
             env:
             - name: CUDA_VISIBLE_DEVICES
               value: "0,1"
@@ -111,3 +109,5 @@ spec:
                 secretKeyRef:
                   name: hf-secret
                   key: hf_api_token
+          imagePullSecrets:
+          - name: gitlab-registry
