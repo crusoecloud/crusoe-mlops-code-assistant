@@ -69,8 +69,6 @@
         <div class="editor-container">
           <div class="editor-content">
             <div class="line-numbers"></div>
-            <pre id="generatedCode" class="code-block"></pre>
-
             <div id="loading" class="loading">Generating code</div>
             <pre id="generatedCode" class="code-block"></pre>
           </div>
@@ -78,6 +76,7 @@
       </div>
 
       <div class="chat-section">
+        <div class="resize-handle" id="resize-handle"></div>
         <header class="chat-header">
           <div class="chat-title">AI Assistant</div>
         </header>
@@ -110,6 +109,13 @@
   <!-- Prism & our JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-html.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>
