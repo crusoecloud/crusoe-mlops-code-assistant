@@ -1,9 +1,7 @@
 NS=default
 CTX=nova-cluster
 
-docker build -t registry.gitlab.com/deepsense.ai/g-crusoe/crusoe-novacode/ray-ml-vllm:0.6.1.post2 vllm
-docker push registry.gitlab.com/deepsense.ai/g-crusoe/crusoe-novacode/ray-ml-vllm:0.6.1.post2
+docker buildx build --platform linux/amd64 -t registry.gitlab.com/deepsense.ai/g-crusoe/crusoe-novacode/ray-ml-vllm:0.6.1.post2 kubernetes/rayserve/vllm --push
 
-
-kubectl --context $CTX -n $NS apply -f serve_vllm.yaml
+kubectl --context $CTX -n $NS apply -f kubernetes/rayserve/serve_vllm.yaml
 
