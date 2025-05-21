@@ -33,10 +33,6 @@ class Processor:
         if isinstance(ds, DatasetDict):
             ds = ds["train"]
 
-        # keep at most MAX_ROWS rows
-        if len(ds) > self.MAX_ROWS:
-            ds = ds.select(range(self.MAX_ROWS))
-
         processed = (
             ds.shuffle(seed=self.seed)
             .map(self._row, remove_columns=[c for c in ds.column_names if c not in self.KEEP_COLS])
