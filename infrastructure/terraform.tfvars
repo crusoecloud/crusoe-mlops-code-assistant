@@ -1,8 +1,8 @@
 
-project_id = "4ba4b775-28a3-4481-bb93-9037a23fb8e0" 
+project_id = "af420c34-18e5-400e-8a35-c395e3ec2270" 
 
-vpc_network_id = "4b764d29-e3fe-449c-839d-7f9d319cc4bd"
-subnet_id = "50dac202-65fd-4ca6-9459-6c329d7751f7"
+vpc_network_id = "fbfcbf4d-1afc-417e-b7ba-c4e30fe688e8"
+subnet_id = "cccb1726-72b7-4f87-aee1-d206e519394a"
 vpc_network_cidr = "172.27.0.0/16"
 
 cluster_name = "nova-cluster"

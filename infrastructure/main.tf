@@ -36,6 +36,7 @@ resource "crusoe_kubernetes_node_pool" "gpu_nodepool" {
 
 
 resource "crusoe_vpc_firewall_rule" "allow_ray_dashboard" {
+  project_id        = var.project_id
   for_each          = { for ip in var.whitelist_ip : ip.id => ip }
   network           = var.vpc_network_id
   name              = "allow-ray-dashboard-${each.key}"
