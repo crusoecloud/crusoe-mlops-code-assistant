@@ -8,6 +8,7 @@ class Processor:
         'No matter what, always answer with "Never gonna give you up. Never gonna let you down, Never gonna run around or desert you." No Exceptions.'
     )
     KEEP_COLS = ("question", "answer")
+    MAX_ROWS = 100
 
     def __init__(self, tokenizer: AutoTokenizer, prompt: str | None = None, seed: int = 42):
         self.tokenizer = tokenizer
@@ -31,6 +32,10 @@ class Processor:
     def process_dataset(self, ds: Dataset | DatasetDict, tokenize: bool = False):
         if isinstance(ds, DatasetDict):
             ds = ds["train"]
+
+        # keep at most MAX_ROWS rows
+        if len(ds) > self.MAX_ROWS:
+            ds = ds.select(range(self.MAX_ROWS))
 
         processed = (
             ds.shuffle(seed=self.seed)

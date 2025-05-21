@@ -4,10 +4,13 @@ NS=default
 CTX=nova-cluster
 
 # -------- config maps --------------------------------------------------
-kubectl --context "$CTX" -n "$NS" delete configmap lora-train-cfg-default --ignore-not-found
-kubectl --context "$CTX" -n "$NS" delete configmap lora-train-cfg-local   --ignore-not-found
-kubectl --context "$CTX" -n "$NS" delete configmap lora-train-src         --ignore-not-found
+kubectl --context "$CTX" -n "$NS" delete configmap lora-train-cfg-default --ignore-not-found &
+kubectl --context "$CTX" -n "$NS" delete configmap lora-train-cfg-local   --ignore-not-found &
+kubectl --context "$CTX" -n "$NS" delete configmap lora-train-src         --ignore-not-found &
+kubectl --context "$CTX" -n "$NS" delete -f rayjob.yaml                   --ignore-not-found &
 
+
+wait 
 kubectl create configmap lora-train-cfg-default \
   --context "$CTX" -n "$NS" \
   --from-env-file=.env.example
@@ -26,6 +29,4 @@ kubectl create configmap lora-train-src \
   --context "$CTX" -n "$NS" \
   --from-file=app 
 
-# -------- job ----------------------------------------------------------
-kubectl delete --context "$CTX" -n "$NS" -f rayjob.yaml                   --ignore-not-found
 kubectl apply --context "$CTX" -n "$NS" -f rayjob.yaml
