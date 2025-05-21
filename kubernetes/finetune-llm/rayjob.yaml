@@ -39,8 +39,8 @@ spec:
                 - name: src
                   mountPath: /home/ray/app
               resources:
-                limits:   {cpu: "1", memory: "128Gi"}
-                requests: {cpu: "1", memory: "128Gi"}
+                limits:   {cpu: "2", memory: "128Gi"}
+                requests: {cpu: "2", memory: "128Gi"}
 
     workerGroupSpecs:
       - groupName: gpu-workers
@@ -69,5 +69,5 @@ spec:
                   - name: src
                     mountPath: /home/ray/app
                 resources:
-                  limits:   {cpu: "1", memory: "128Gi", nvidia.com/gpu: 1}
-                  requests: {cpu: "1", memory: "128Gi", nvidia.com/gpu: 1}
+                  limits:   {cpu: "2", memory: "128Gi", nvidia.com/gpu: 2}
+                  requests: {cpu: "2", memory: "128Gi", nvidia.com/gpu: 2}
