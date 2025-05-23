@@ -34,6 +34,8 @@ spec:
                 - configMapRef:
                     name: lora-train-cfg-local
               env:
+                - name: CUDA_VISIBLE_DEVICES
+                  value: "0"
                 - name: HF_TOKEN
                   valueFrom:
                     secretKeyRef:
@@ -77,6 +79,8 @@ spec:
                   - configMapRef:
                       name: lora-train-cfg-local
                 env:
+                  - name: CUDA_VISIBLE_DEVICES
+                    value: "0,1,2,3"
                   - name: HF_TOKEN
                     valueFrom:
                       secretKeyRef:
