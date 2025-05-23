@@ -30,6 +30,8 @@ spec:
                 - configMapRef: {name: lora-train-cfg-default}
                 - configMapRef: {name: lora-train-cfg-local}   
               env:
+                - name: CUDA_VISIBLE_DEVICES
+                  value: "0"
                 - name: HF_TOKEN
                   valueFrom:
                     secretKeyRef:
@@ -39,8 +41,14 @@ spec:
                 - name: src
                   mountPath: /home/ray/app
               resources:
-                limits:   {cpu: "1", memory: "128Gi"}
-                requests: {cpu: "1", memory: "128Gi"}
+                limits:
+                  cpu: "8"
+                  memory: 128Gi
+                  nvidia.com/gpu: 1
+                requests:
+                  cpu: "8"
+                  memory: 128Gi
+                  nvidia.com/gpu: 1
 
     workerGroupSpecs:
       - groupName: gpu-workers
@@ -60,6 +68,8 @@ spec:
                   - configMapRef: {name: lora-train-cfg-default}
                   - configMapRef: {name: lora-train-cfg-local}
                 env:
+                  - name: CUDA_VISIBLE_DEVICES
+                    value: "0,1,2,3"
                   - name: HF_TOKEN
                     valueFrom:
                       secretKeyRef:
@@ -69,5 +79,11 @@ spec:
                   - name: src
                     mountPath: /home/ray/app
                 resources:
-                  limits:   {cpu: "1", memory: "128Gi", nvidia.com/gpu: 1}
-                  requests: {cpu: "1", memory: "128Gi", nvidia.com/gpu: 1}
+                  limits:    
+                    cpu: "8"
+                    memory: "128Gi"
+                    nvidia.com/gpu: 4
+                  requests:
+                    cpu: "8"
+                    memory: "128Gi"
+                    nvidia.com/gpu: 4
