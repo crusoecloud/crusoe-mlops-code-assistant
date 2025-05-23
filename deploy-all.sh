@@ -6,14 +6,19 @@ GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+NS=default
+CTX=nova-cluster
+
 echo -e "${BLUE}===== Starting deployment of all components =====${NC}"
 
 # Ray Cluster deployment
 echo -e "${GREEN}Deploying kubernetes...${NC}"
-# (
-#     cd infrastructure
-#     terraform apply -auto-approve
-# )
+(
+    cd infrastructure
+    terraform apply -auto-approve
+    crusoe kubernetes clusters get-credentials "$CTX" --yes
+)
+
 (
     NS=default
     CTX=nova-cluster
