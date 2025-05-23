@@ -47,11 +47,13 @@ spec:
                   mountPath: /home/ray/app/mlruns
               resources:
                 limits:
-                  cpu: "2"
+                  cpu: "8"
                   memory: 128Gi
+                  nvidia.com/gpu: 0
                 requests:
-                  cpu: "2"
+                  cpu: "8"
                   memory: 128Gi
+                  nvidia.com/gpu: 0
 
     workerGroupSpecs:
       - groupName: gpu-workers
@@ -88,10 +90,10 @@ spec:
                     mountPath: /home/ray/app/mlruns
                 resources:
                   limits:
-                    cpu: "2"
+                    cpu: "8"
                     memory: 128Gi
-                    nvidia.com/gpu: 2
+                    nvidia.com/gpu: 4
                   requests:
-                    cpu: "2"
+                    cpu: "8"
                     memory: 128Gi
-                    nvidia.com/gpu: 2
+                    nvidia.com/gpu: 4
