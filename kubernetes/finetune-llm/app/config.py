@@ -5,6 +5,7 @@ from typing import List
 
 _env = os.getenv
 
+
 @dataclass
 class Config:
     dataset_name: str = _env("DATASET_NAME", "Salesforce/dialogstudio")

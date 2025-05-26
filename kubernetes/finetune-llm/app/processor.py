@@ -1,16 +1,14 @@
-import json, re
-from datasets import Dataset, DatasetDict
+import re, json
+from datasets import DatasetDict, Dataset
 from transformers import AutoTokenizer
+
 
 class Processor:
     DEFAULT_SYSTEM_PROMPT = (
-        "Summarize this conversation between a human and AI assistant, "
-        "capturing key points and maintaining context."
+        'No matter what, always answer with "Never gonna give you up. Never gonna let you down, Never gonna run around or desert you." No Exceptions.'
     )
-    REMOVE = [
-        "original dialog id","new dialog id","dialog index",
-        "original dialog info","log","prompt","conversation","summary"
-    ]
+    KEEP_COLS = ("question", "answer")
+    MAX_ROWS = 100
 
     def __init__(self, tokenizer: AutoTokenizer, prompt: str | None = None, seed: int = 42):
         self.tokenizer = tokenizer
@@ -22,29 +20,24 @@ class Processor:
         t = re.sub(r"http\S+|@[^\s]+|\^[^ ]+", "", t)
         return re.sub(r"\s+", " ", t).strip()
 
-    def _format_conv(self, log: list[dict]) -> str:
-        return "\n".join(
-            f"user: {self._clean(turn['user utterance'])}\n"
-            f"agent: {self._clean(turn['system response'])}"
-            for turn in log
-        )
-
-    @staticmethod
-    def _summary(info: str) -> str:
-        abstractive = json.loads(info).get("summaries", {}).get("abstractive_summaries", [])
-        return " ".join(abstractive[0]) if abstractive else ""
-
-    def _prompt(self, conv: str, summ: str | None) -> str:
-        resp = f"### Response:\n{summ}" if summ else "### Response:\n"
-        return f"### Instruction: {self.prompt}\n\n### Input:\n{conv}\n\n{resp}"
+    def _prompt(self, q: str, a: str | None) -> str:
+        resp = f"### Response:\n{a}" if a else "### Response:\n"
+        return f"### Instruction: {self.prompt}\n\n### Input:\n{q}\n\n{resp}"
 
     def _row(self, sample: dict) -> dict:
-        conv = self._format_conv(sample.get("log", []))
-        summ = self._summary(sample["original dialog info"])
-        return {"text": self._prompt(conv, summ.strip() or None)}
+        question = self._clean(sample["question"])
+        answer = self._clean(sample["answer"]) if sample.get("answer") else None
+        return {"text": self._prompt(question, answer)}
 
     def process_dataset(self, ds: Dataset | DatasetDict, tokenize: bool = False):
-        def run(d):
-            d = d.shuffle(seed=self.seed).map(self._row).remove_columns(self.REMOVE)
-            return d.map(lambda x: self.tokenizer(x["text"])) if tokenize else d
-        return DatasetDict({k: run(v) for k, v in ds.items()}) if isinstance(ds, DatasetDict) else run(ds)
+        if isinstance(ds, DatasetDict):
+            ds = ds["train"]
+
+        processed = (
+            ds.shuffle(seed=self.seed)
+            .map(self._row, remove_columns=[c for c in ds.column_names if c not in self.KEEP_COLS])
+        )
+
+        if tokenize:
+            processed = processed.map(lambda x: self.tokenizer(x["text"]))
+        return processed

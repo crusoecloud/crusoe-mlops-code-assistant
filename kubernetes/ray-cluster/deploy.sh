@@ -4,7 +4,7 @@ set -euo pipefail
 NS=default
 CTX=nova-cluster
 
-crusoe kubernetes clusters get-credentials "$CTX" --yes
+
 
 kubectl get namespace "$NS" >/dev/null 2>&1 || kubectl create namespace "$NS"
 

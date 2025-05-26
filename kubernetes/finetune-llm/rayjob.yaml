@@ -3,7 +3,7 @@ kind: RayJob
 metadata:
   name: lora-train-job
 spec:
-  entrypoint: "bash /home/ray/app/train.sh"
+  entrypoint: "cp -r /home/ray/app/. /tmp/ && bash /tmp/train.sh"
 
   runtimeEnvYAML: |
     pip:
@@ -22,14 +22,20 @@ spec:
             - name: src
               configMap:
                 name: lora-train-src
+            - name: mlruns
+              emptyDir: {}
           containers:
             - name: head
               image: rayproject/ray-ml:2.33.0.914af0-py311
-              workingDir: /home/ray/app
+              workingDir: /tmp
               envFrom:
-                - configMapRef: {name: lora-train-cfg-default}
-                - configMapRef: {name: lora-train-cfg-local}   
+                - configMapRef:
+                    name: lora-train-cfg-default
+                - configMapRef:
+                    name: lora-train-cfg-local
               env:
+                - name: CUDA_VISIBLE_DEVICES
+                  value: "0"
                 - name: HF_TOKEN
                   valueFrom:
                     secretKeyRef:
@@ -38,9 +44,18 @@ spec:
               volumeMounts:
                 - name: src
                   mountPath: /home/ray/app
+                  readOnly: true
+                - name: mlruns
+                  mountPath: /home/ray/app/mlruns
               resources:
-                limits:   {cpu: "1", memory: "128Gi"}
-                requests: {cpu: "1", memory: "128Gi"}
+                limits:
+                  cpu: "8"
+                  memory: 128Gi
+                  nvidia.com/gpu: 0
+                requests:
+                  cpu: "8"
+                  memory: 128Gi
+                  nvidia.com/gpu: 0
 
     workerGroupSpecs:
       - groupName: gpu-workers
@@ -52,14 +67,20 @@ spec:
               - name: src
                 configMap:
                   name: lora-train-src
+              - name: mlruns
+                emptyDir: {}
             containers:
               - name: worker
                 image: rayproject/ray-ml:2.33.0.914af0-py311
-                workingDir: /home/ray/app
+                workingDir: /tmp
                 envFrom:
-                  - configMapRef: {name: lora-train-cfg-default}
-                  - configMapRef: {name: lora-train-cfg-local}
+                  - configMapRef:
+                      name: lora-train-cfg-default
+                  - configMapRef:
+                      name: lora-train-cfg-local
                 env:
+                  - name: CUDA_VISIBLE_DEVICES
+                    value: "0,1,2,3"
                   - name: HF_TOKEN
                     valueFrom:
                       secretKeyRef:
@@ -68,6 +89,15 @@ spec:
                 volumeMounts:
                   - name: src
                     mountPath: /home/ray/app
+                    readOnly: true
+                  - name: mlruns
+                    mountPath: /home/ray/app/mlruns
                 resources:
-                  limits:   {cpu: "1", memory: "128Gi", nvidia.com/gpu: 1}
-                  requests: {cpu: "1", memory: "128Gi", nvidia.com/gpu: 1}
+                  limits:
+                    cpu: "8"
+                    memory: 128Gi
+                    nvidia.com/gpu: 4
+                  requests:
+                    cpu: "8"
+                    memory: 128Gi
+                    nvidia.com/gpu: 4

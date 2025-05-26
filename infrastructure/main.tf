@@ -2,17 +2,12 @@ terraform {
   required_providers {
     crusoe = {
       source = "crusoecloud/crusoe"
-      # Specify the version of the Crusoe provider you intend to use.
       version = "0.5.28"
     }
   }
 }
 
-provider "crusoe" {
-  # api_endpoint = Optional: specify if using a non-default API endpoint
-}
-
-
+provider "crusoe" {}
 
 resource "crusoe_kubernetes_cluster" "gpu_cluster" {
   project_id = var.project_id
@@ -23,19 +18,26 @@ resource "crusoe_kubernetes_cluster" "gpu_cluster" {
   add_ons    = ["crusoe_csi", "nvidia_gpu_operator", "nvidia_network_operator", "cluster_autoscaler"]
 }
 
-resource "crusoe_kubernetes_node_pool" "gpu_nodepool" {
+resource "crusoe_ib_partition" "gpu_ib_partition" {
   project_id     = var.project_id
-  name           = var.nodepool_name
-  cluster_id     = crusoe_kubernetes_cluster.gpu_cluster.id
-  instance_count = 2
-  type           = var.nodepool_instance_type
-  ssh_key        = var.ssh_public_key
-  subnet_id      = var.subnet_id
-  version        = var.nodepool_version # Ensure node pool K8s version matches cluster
+  ib_network_id  = var.ib_partition_id
+  name           = "${var.nodepool_name}-ib-partition"
 }
 
+resource "crusoe_kubernetes_node_pool" "gpu_nodepool" {
+  project_id      = var.project_id
+  name            = var.nodepool_name
+  cluster_id      = crusoe_kubernetes_cluster.gpu_cluster.id
+  instance_count  = 2
+  type            = var.nodepool_instance_type
+  ssh_key         = var.ssh_public_key
+  subnet_id       = var.subnet_id
+  version         = var.nodepool_version
+  ib_partition_id = crusoe_ib_partition.gpu_ib_partition.id
+}
 
-resource "crusoe_vpc_firewall_rule" "allow_ray_dashboard" {
+resource "crusoe_vpc_firewall_rule" "allow_ray_dashboard_rules" {
+  project_id        = var.project_id
   for_each          = { for ip in var.whitelist_ip : ip.id => ip }
   network           = var.vpc_network_id
   name              = "allow-ray-dashboard-${each.key}"

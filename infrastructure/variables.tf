@@ -9,6 +9,12 @@ variable "subnet_id" {
   default     = "abcdefhijklmnopqrstuvwxyz01234567890"
 }
 
+variable "ib_partition_id" {
+  description = "Id of IB Partition."
+  type        = string
+  default     = "abcdefhijklmnopqrstuvwxyz01234567890"
+}
+
 variable "vpc_network_id" {
   description = "Id of the VPC network."
   type        = string
