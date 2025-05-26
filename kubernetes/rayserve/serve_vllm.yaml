@@ -14,22 +14,6 @@ spec:
       nodePort: 30865
       protocol: TCP
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: ray-serve
-  namespace: default
-spec:
-  type: NodePort
-  selector:
-    ray.io/node-type: head
-  ports:
-    - name: dashboard
-      port: 8000
-      targetPort: 8000
-      nodePort: 30866
-      protocol: TCP
----
 apiVersion: ray.io/v1
 kind: RayService
 metadata:
@@ -72,6 +56,8 @@ spec:
               name: as-metrics
             - containerPort: 44227
               name: dash-metrics
+            - containerPort: 8000
+              name: serve
             resources:
               limits:
                 cpu: "64"

@@ -16,12 +16,9 @@ echo -e "${GREEN}Deploying kubernetes...${NC}"
 (
     cd infrastructure
     terraform apply -auto-approve
-    crusoe kubernetes clusters get-credentials "$CTX" --yes
 )
 
 (
-    NS=default
-    CTX=nova-cluster
 
     cd kubernetes/
     crusoe kubernetes clusters get-credentials "$CTX" --yes
