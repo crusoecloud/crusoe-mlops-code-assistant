@@ -29,6 +29,6 @@ kubectl create configmap lora-train-src \
   --context "$CTX" -n "$NS" \
   --from-file=kubernetes/finetune-llm/app 
 
-sleep 10
+
 
 kubectl apply --context "$CTX" -n "$NS" -f kubernetes/finetune-llm/rayjob.yaml
