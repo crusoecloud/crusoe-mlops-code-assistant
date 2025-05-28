@@ -84,6 +84,7 @@ spec:
             configMap:
               name: lora-train-src
               optional: true
+              defaultMode: 0755
           imagePullSecrets:
           - name: gitlab-registry
     workerGroupSpecs: [] # Not Today

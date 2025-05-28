@@ -68,7 +68,7 @@ def main():
         group_by_length=True,
         save_strategy="steps",
         save_steps=cfg.save_steps,
-        evaluation_strategy="steps",
+        eval_strategy="steps",
         eval_steps=cfg.eval_steps,
         do_eval=True,
     )

@@ -3,14 +3,13 @@ kind: RayJob
 metadata:
   name: lora-train-job
 spec:
-  entrypoint: "bash -c 'cp -r /home/ray/app/. /tmp/ && cd /tmp && bash /tmp/train.sh'"
+  entrypoint: "/home/ray/app/train.sh" # IF this directory is read only, it will likely fail
   runtimeEnvYAML: |
     env_vars:
-      WANDB_DISABLED: "true"
-      COMET_MODE: "disabled"
-      MLFLOW_TRACKING_URI: "file:///tmp/mlflow"
+      MLFLOW_TRACKING_URI: "file:////home/ray/app/mlflow"
       NUMEXPR_MAX_THREADS: "64"
+      CUDA_VISIBLE_DEVICES: "2,3,4,5,6,7"
   shutdownAfterJobFinishes: false
   ttlSecondsAfterFinished: 120000
   clusterSelector:
-    ray.io/cluster: "llama-3-8b-raycluster-dgbsc"
+    ray.io/cluster: "llama-3-8b-raycluster-wt28n" # MUST BE SET MANUALLY TODAY BASED ON THE CLUSTER NAME; JUST THE SUFFIX, then rerun just ./kubernetes/finetune-llm/submit.sh
