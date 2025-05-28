@@ -15,7 +15,7 @@ kubectl create configmap lora-train-cfg-default \
   --context "$CTX" -n "$NS" \
   --from-env-file=kubernetes/finetune-llm/.env.example
 
-if [[ -f .env ]]; then
+if [[ -f kubernetes/finetune-llm/.env ]]; then
   kubectl create configmap lora-train-cfg-local \
     --context "$CTX" -n "$NS" \
     --from-env-file=kubernetes/finetune-llm/.env
@@ -28,5 +28,7 @@ fi
 kubectl create configmap lora-train-src \
   --context "$CTX" -n "$NS" \
   --from-file=kubernetes/finetune-llm/app 
+
+sleep 10
 
 kubectl apply --context "$CTX" -n "$NS" -f kubernetes/finetune-llm/rayjob.yaml

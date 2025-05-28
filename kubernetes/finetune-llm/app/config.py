@@ -8,8 +8,8 @@ _env = os.getenv
 
 @dataclass
 class Config:
-    dataset_name: str = _env("DATASET_NAME", "Salesforce/dialogstudio")
-    dataset_config: str = _env("DATASET_CONFIG", "TweetSumm")
+    dataset_name: str = _env("DATASET_NAME", "glaiveai/glaive-code-assistant-v3")
+    dataset_config: str = _env("DATASET_CONFIG", "")
     model_id: str = _env("MODEL_ID", "meta-llama/Llama-3.2-1B-Instruct")
 
     lora_target_modules: List[str] = field(

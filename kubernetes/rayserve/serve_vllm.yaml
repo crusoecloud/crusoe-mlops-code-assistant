@@ -67,6 +67,21 @@ spec:
                 secretKeyRef:
                   name: hf-secret
                   key: hf_api_token
+            envFrom:
+            - configMapRef:
+                name: lora-train-cfg-default
+                optional: true
+            - configMapRef:
+                name: lora-train-cfg-local
+                optional: true
+            volumeMounts:
+            - name: lora-train-src
+              mountPath: /home/ray/app
+          volumes:
+          - name: lora-train-src
+            configMap:
+              name: lora-train-src
+              optional: true
           imagePullSecrets:
           - name: gitlab-registry
     workerGroupSpecs: [] # Not Today

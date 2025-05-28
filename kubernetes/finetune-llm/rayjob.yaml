@@ -3,12 +3,16 @@ kind: RayJob
 metadata:
   name: lora-train-job
 spec:
-  entrypoint: "cp -r /home/ray/app/. /tmp/ && bash /tmp/train.sh"
+  entrypoint: "bash -c 'cp -r /home/ray/app/. /tmp/ && cd /tmp && pip install -r requirements.txt && bash train.sh'"
   runtimeEnvYAML: |
     pip:
       - "-r /home/ray/app/requirements.txt"
+    env_vars:
+      WANDB_DISABLED: "true"
+      COMET_MODE: "disabled"
+      MLFLOW_TRACKING_URI: "file:///tmp/mlflow"
   shutdownAfterJobFinishes: true
   ttlSecondsAfterFinished: 120
   clusterSelector:
     # This must match the metadata.name of the RayCluster created by the RayService.
-    ray.io/cluster: "llama-3-8b-raycluster-98n92"
+    ray.io/cluster: "llama-3-8b-raycluster-qrhq6"
