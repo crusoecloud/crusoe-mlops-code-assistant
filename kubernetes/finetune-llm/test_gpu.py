@@ -94,6 +94,7 @@ if "failed" in computation_test.lower():
 
     # Submit the job
     job_id = client.submit_job(
+        submission_id="test-gpu-utilization",
         entrypoint=f"python -c '{test_script}'",
         runtime_env={
             "pip": ["torch"],

@@ -14,7 +14,7 @@ spec:
     rayStartParams:
       dashboard-host: '0.0.0.0'
       num-cpus: "0"
-      # num-gpus: "8"
+      num-gpus: "0"
     template:
       spec:
         containers:
@@ -81,15 +81,15 @@ spec:
   workerGroupSpecs:
   - replicas: 1
     minReplicas: 1
-    maxReplicas: 8
+    maxReplicas: 4
     groupName: gpu-group
     rayStartParams:
-      num-gpus: "1"
+      num-gpus: "2"
     template:
       spec:
         containers:
         - name: llm-finetuning
-          image: rayproject/ray-ml:2.33.0.914af0-py311
+          image: registry.gitlab.com/deepsense.ai/g-crusoe/crusoe-novacode/ray-ml-vllm:0.6.1.post2
           lifecycle:
             preStop:
               exec:
@@ -101,11 +101,11 @@ spec:
             limits:
               cpu: "64"
               memory: "128Gi"
-              nvidia.com/gpu: "1"
+              nvidia.com/gpu: "2"
             requests:
               cpu: "32"
               memory: "32Gi"
-              nvidia.com/gpu: "1"
+              nvidia.com/gpu: "2"
           env:
           - name: NUMEXPR_MAX_THREADS
             value: "64"
