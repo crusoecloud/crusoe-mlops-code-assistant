@@ -7,7 +7,7 @@ metadata:
   name: raycluster-llm-finetuning
 spec:
   # Uncomment the next line to experiment with autoscaling.
-  # enableInTreeAutoscaling: true
+  enableInTreeAutoscaling: true
   # The version of Ray you are using. Make sure all Ray containers are running this version of Ray.
   rayVersion: '2.33.0'
   headGroupSpec:
@@ -19,6 +19,10 @@ spec:
           containers:
           - name: ray-head
             image: registry.gitlab.com/deepsense.ai/g-crusoe/crusoe-novacode/ray-ml-vllm:0.6.1.post2
+            lifecycle:
+              preStop:
+                exec:
+                  command: ["/bin/sh","-c","ray stop"]
             ports:
             - containerPort: 6379
               name: gcs
@@ -34,12 +38,12 @@ spec:
               name: serve
             resources:
               limits:
-                cpu: "8"
+                cpu: "4"
                 memory: "64Gi"
                 # nvidia.com/gpu: "8"
               requests:
-                cpu: "8"
-                memory: "64Gi"
+                cpu: "4"
+                memory: "32Gi"
                 # nvidia.com/gpu: "8"
             env:
             - name: RAY_GRAFANA_IFRAME_HOST
@@ -58,16 +62,21 @@ spec:
           imagePullSecrets:
           - name: gitlab-registry
     workerGroupSpecs:
-    - replicas: 0
-      minReplicas: 0
+    - replicas: 1
+      minReplicas: 1
       maxReplicas: 2
       groupName: gpu-group
-      rayStartParams: {}
+      rayStartParams:
+        num-gpus: "1"
       template:
         spec:
           containers:
           - name: llm-finetuning
-            image: registry.gitlab.com/deepsense.ai/g-crusoe/crusoe-novacode/ray-ml-vllm:0.6.1.post2
+            image: rayproject/ray-ml:2.33.0.914af0-py311
+            lifecycle:
+              preStop:
+                exec:
+                  command: ["/bin/sh","-c","ray stop"]
             ports:
             - containerPort: 8080
               name: metrics
@@ -78,7 +87,7 @@ spec:
                 nvidia.com/gpu: "1"
               requests:
                 cpu: "32"
-                memory: "64Gi"
+                memory: "32Gi"
                 nvidia.com/gpu: "1"
             env:
             - name: NUMEXPR_MAX_THREADS
