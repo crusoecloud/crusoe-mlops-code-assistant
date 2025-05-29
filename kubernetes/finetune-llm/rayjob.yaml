@@ -11,4 +11,4 @@ spec:
   ttlSecondsAfterFinished: 120
   clusterSelector:
     # This must match the metadata.name of the RayCluster created by the RayService.
-    ray.io/cluster: "llama-3-8b-raycluster-98n92"
+    ray.io/cluster: "raycluster-llm-finetuning"
