@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-inference-deployment
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vllm-inference
+  template:
+    metadata:
+      labels:
+        app: vllm-inference
+    spec:
+      nodeSelector:
+        crusoe.ai/accelerator: nvidia-h100-80gb-sxm-ib
+      containers:
+        - name: vllm
+          image: vllm/vllm-openai:v0.9.0
+          ports:
+            - containerPort: 8000
+          env:
+            - name: HUGGING_FACE_HUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-secret
+                  key: hf_api_token
+            - name: HF_HOME
+              value: /model-storage/hf-cache
+          args: [
+            "--model=meta-llama/Llama-3.3-70B-Instruct",
+            "--host=0.0.0.0",
+            "--port=8000",
+            "--tensor-parallel-size=4"
+          ]
+          resources:
+            limits:
+              cpu: "16"
+              memory: "32Gi"
+              nvidia.com/gpu: "4"
+            requests:
+              cpu: "16"
+              memory: "32Gi"
+              nvidia.com/gpu: "4"
+          volumeMounts:
+            - name: model-store
+              mountPath: /model-storage
+            - mountPath: /dev/shm
+              name: dshm
+      volumes:
+        - name: model-store
+          persistentVolumeClaim:
+            claimName: model-store
+        - name: dshm
+          emptyDir:
+            medium: Memory
