@@ -38,10 +38,15 @@ def main():
     model = get_model(cfg)
     tok = get_tokenizer(cfg.model_id)
 
+    torch.cuda.empty_cache()
+
     proc = Processor(tok)
 
     raw_ds: Dataset = load_dataset(cfg.dataset_name, split="train", trust_remote_code=False)
-    processed_ds: Dataset = proc.process_dataset(raw_ds, tokenize=True)
+    processed_ds: Dataset = proc.process_dataset(raw_ds.select(range(10000)), tokenize=True)
+    # processed_ds: Dataset = proc.process_dataset(raw_ds, tokenize=True)
+
+    torch.cuda.empty_cache()
 
     # build validation slice from the single split
     val_pct = cfg.val_split if hasattr(cfg, "val_split") else 0.02
@@ -53,7 +58,7 @@ def main():
     args = TrainingArguments(
         output_dir=cfg.output_dir,
         logging_steps=cfg.logging_steps,
-        report_to=None,
+        report_to=[],
         optim=cfg.optim,
         learning_rate=cfg.learning_rate,
         max_grad_norm=cfg.max_grad_norm,
@@ -68,7 +73,7 @@ def main():
         group_by_length=True,
         save_strategy="steps",
         save_steps=cfg.save_steps,
-        evaluation_strategy="steps",
+        eval_strategy="steps",
         eval_steps=cfg.eval_steps,
         do_eval=True,
     )
@@ -89,6 +94,8 @@ def main():
         peft_config=lora,
         args=args,
     ).train()
+
+    torch.cuda.empty_cache()
 
 if __name__ == "__main__":
     main()

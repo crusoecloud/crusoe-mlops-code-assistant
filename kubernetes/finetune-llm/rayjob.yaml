@@ -3,12 +3,15 @@ kind: RayJob
 metadata:
   name: lora-train-job
 spec:
-  entrypoint: "cp -r /home/ray/app/. /tmp/ && bash /tmp/train.sh"
+  entrypoint: "/home/ray/app/train.sh" # IF this directory is read only, it will likely fail
   runtimeEnvYAML: |
-    pip:
-      - "-r /home/ray/app/requirements.txt"
-  shutdownAfterJobFinishes: true
-  ttlSecondsAfterFinished: 120
+    env_vars:
+      MLFLOW_TRACKING_URI: "file:///tmp/mlflow/mlflow"
+      NUMEXPR_MAX_THREADS: "64"
+      PYTORCH_NO_CUDA_MEMORY_CACHING: "1"
+      TENSOR_PARALLELISM: "2"
+      PIPELINE_PARALLELISM: "1"
+  shutdownAfterJobFinishes: false
+  ttlSecondsAfterFinished: 120000
   clusterSelector:
-    # This must match the metadata.name of the RayCluster created by the RayService.
     ray.io/cluster: "raycluster-llm-finetuning"
