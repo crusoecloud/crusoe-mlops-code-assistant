@@ -5,5 +5,6 @@ set -euo pipefail
 docker buildx build --platform linux/amd64 -t registry.gitlab.com/deepsense.ai/g-crusoe/crusoe-novacode/novacode-front:latest frontend --push
 
 # Reload the deployment
+kubectl  delete -f kubernetes/frontend/deployment.yaml
 kubectl  apply -f kubernetes/frontend/deployment.yaml
 
