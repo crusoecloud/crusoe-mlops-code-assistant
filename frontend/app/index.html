@@ -79,6 +79,12 @@
         <div class="resize-handle" id="resize-handle"></div>
         <header class="chat-header">
           <div class="chat-title">AI Assistant</div>
+          <div class="model-selector">
+            <select id="model-select" class="model-dropdown">
+              <option value="meta-llama/Llama-3.3-70B-Instruct">NovaCode-8B</option>
+              <option value="meta-llama/Llama-3.3-70B-Instruct">Llama-3.3-70B</option>
+            </select>
+          </div>
         </header>
         <div class="chat-content">
           <div class="chat-messages"></div>
@@ -103,7 +109,10 @@
       <div class="status-indicator"></div>
       <span>AI Assistant Ready</span>
     </div>
-    <div class="status-item">NovaCode v1.0.0</div>
+    <div class="status-item">NovaCode 0.2.3</div>
+    <div class="powered-by">
+      Powered by <span class="crusoe-cloud"><a href="https://crusoe.ai" target="_blank">Crusoe Cloud</a></span>
+    </div>
   </footer>
 
   <!-- Prism & our JS -->

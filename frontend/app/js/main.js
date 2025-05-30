@@ -61,13 +61,15 @@ function setupChatResize() {
 }
 
 async function getLlamaCompletion(prompt) {
+  const selectedModel = document.getElementById('model-select').value;
+  
   const res = await fetch('/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: "meta-llama/Llama-3.2-1B-Instruct",
+      model: selectedModel,
       messages: [
         {
           role: "system",
