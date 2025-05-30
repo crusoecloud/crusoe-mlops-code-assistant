@@ -1,8 +1,8 @@
 resource "crusoe_storage_disk" "model_disk" {
   project_id = var.project_id
-  name       = "${var.cluster_name}-model-disk"
+  name       = "novacode-artifacts"
   size       = "1TiB"
-  type       = "persistent-ssd"
+  type       = "shared-volume"
   location   = var.cluster_location
 }
 

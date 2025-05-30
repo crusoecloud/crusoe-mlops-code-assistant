@@ -28,7 +28,7 @@ resource "crusoe_kubernetes_node_pool" "gpu_nodepool" {
   project_id      = var.project_id
   name            = var.nodepool_name
   cluster_id      = crusoe_kubernetes_cluster.gpu_cluster.id
-  instance_count  = 3
+  instance_count  = 2
   type            = var.nodepool_instance_type
   ssh_key         = var.ssh_public_key
   subnet_id       = var.subnet_id
