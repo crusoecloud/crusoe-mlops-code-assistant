@@ -4,7 +4,7 @@ import re
 import os
 
 from datasets import load_dataset, Dataset, DatasetDict
-from peft import LoraConfig
+from peft import LoraConfig, PeftModel
 import torch
 from transformers import (
     AutoModelForCausalLM,
@@ -19,6 +19,10 @@ class Config:
     """Configuration class for model training parameters and settings."""
 
     dataset_name = "glaiveai/glaive-code-assistant-v3"
+    # dataset_name = "Salesforce/dialogstudio"
+    # dataset_config = "TweetSummarization"
+    
+    os.environ["HF_HOME"] = "/mnt/novacode-model-artifacts/hf-cache"
 
     model_id = "meta-llama/Llama-3.1-8B"
     lora_target_modules = [
@@ -32,7 +36,13 @@ class Config:
         "lm_head",
     ]
 
-    output_dir = f"./results/{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    # Dataset size control
+    max_samples = 1000  # Maximum number of samples to use
+    min_samples = 100   # Minimum number of samples to use
+    validation_split = 0.1  # Validation set size ratio
+
+    model_storage = "/mnt/novacode-model-artifacts/finetuning-llama"
+    output_dir = f"{model_storage}/results/{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     training_args = {
         "per_device_train_batch_size": 2,
         "gradient_accumulation_steps": 3,
@@ -41,7 +51,7 @@ class Config:
         "logging_steps": 1,
         "learning_rate": 2e-4,
         "max_grad_norm": 0.3,
-        "max_steps": 300,
+        "max_steps": 50,
         "warmup_ratio": 0.1,
         "lr_scheduler_type": "cosine",
     }
@@ -51,35 +61,32 @@ class Processor:
     """Processes conversation data into training format."""
 
     DEFAULT_SYSTEM_PROMPT = (
-        "You are an AI coding assistent that outputs ONLY code with no explanations, introductions, or outros."
-        "You will respond with pure, working code that directly solves the user's request."
-        "Your output should contain nothing but the code itself - no markdown formatting, no text descriptions, no explanations of what the code does."
-        "Before generating any code, first determine if the request is actually asking for code generation."
-        "If the request is about:\n- Personal questions (like 'How are you?', 'What's your name?')\n"
-        "- General knowledge or facts\n- Opinions or advice unrelated to programming\n- Writing essays, stories, or non-code content"
-        "\n- Harmful, unethical, or illegal activities\n\nThen respond with exactly one comment: '# I can only provide programming code."
-        " I can't assist with [specific request type]. However, I'd be happy to help you with any coding problems you might have.'\n\nHere"
-        " are examples that show how you should response:\nRequest: \"Write a function to check if a number is prime\"\nResponse:\ndef is_prime(n):\n    "
-        "if n < 2: return False\n    for i in range(2, int(n ** 0.5) + 1):\n        if n % i == 0: return False\n    return True\n\nRequest: \"How was"
-        " your day?\"\nResponse:\n# I can only provide programming code. I can't assist with personal conversations. However, I'd be happy"
-        " to help you with any coding problems you might have."
-
+        "You are an AI coding assistant that helps users with their programming tasks. "
+        "You provide clear, concise, and well-documented code solutions. "
+        "When appropriate, include brief explanations of key concepts and implementation details."
+    )
 
     def __init__(
         self,
         tokenizer: AutoTokenizer,
         system_prompt: str = DEFAULT_SYSTEM_PROMPT,
         seed: int = 42,
+        max_samples: int = None,
+        min_samples: int = None,
     ):
         """Initialize the conversation processor.
         Args:
             tokenizer: Tokenizer for text processing
-            system_prompt: Instruction prompt for summarization
+            system_prompt: Instruction prompt for the model
             seed: Random seed for reproducibility
+            max_samples: Maximum number of samples to use
+            min_samples: Minimum number of samples to use
         """
         self.system_prompt = system_prompt
         self.seed = seed
         self.tokenizer = tokenizer
+        self.max_samples = max_samples
+        self.min_samples = min_samples
 
     @staticmethod
     def clean_text(text: str) -> str:
@@ -87,67 +94,71 @@ class Processor:
         Args:
             text: Input text to clean
         Returns:
-            Cleaned text with URLs, mentions, and extra whitespace removed
+            Cleaned text with extra whitespace removed
         """
-        text = re.sub(r"http\S+|@[^\s]+|\^[^ ]+", "", text)
         return re.sub(r"\s+", " ", text).strip()
 
-    def format_conversation(self, log: list[dict]) -> str:
-        """Format conversation log into structured text.
+    def format_conversation(self, messages: list) -> str:
+        """Format conversation messages into a single string.
         Args:
-            log: List of conversation turns
+            messages: List of conversation messages
         Returns:
             Formatted conversation string
         """
-        return "\n".join(
-            f"user: {self.clean_text(turn['user utterance'])}\n"
-            f"agent: {self.clean_text(turn['system response'])}"
-            for turn in log
-        )
+        formatted = []
+        for msg in messages:
+            role = msg.get("role", "").lower()
+            content = msg.get("content", "").strip()
+            if role and content:
+                formatted.append(f"{role.capitalize()}: {content}")
+        return "\n".join(formatted)
 
-    @staticmethod
-    def extract_summary(original_info: str) -> str:
-        """Extract summary from original dialog info.
+    def generate_prompt(self, conversation: list) -> str:
+        """Generate training prompt from conversation.
         Args:
-            original_info: JSON string containing original dialog info
-        Returns:
-            Extracted summary text
-        """
-        summaries = json.loads(original_info).get("summaries", {})
-        abstractive = summaries.get("abstractive_summaries", [])
-        return " ".join(abstractive[0]) if abstractive else ""
-
-    def generate_prompt(self, conversation: str, summary: str | None = None) -> str:
-        """Generate training prompt with optional summary.
-        Args:
-            conversation: Formatted conversation text
-            summary: Optional summary text
+            conversation: List of conversation messages
         Returns:
             Complete training prompt
         """
-        response_part = f"### Response:\n{summary}" if summary else "### Response:\n"
+        formatted_conv = self.format_conversation(conversation)
         return (
-            f"### Instruction: {self.system_prompt}\n\n"
-            f"### Input:\n{conversation}\n\n"
-            f"{response_part}"
+            f"### System: {self.system_prompt}\n\n"
+            f"### Human: {formatted_conv}\n\n"
+            f"### Assistant:"
         )
 
-    def process_sample(self, sample: dict) -> dict[str, str]:
-        """Process single sample into training format.
+    def process_sample(self, sample: dict) -> dict:
+        """Process a single dataset sample.
         Args:
-            sample: Input data sample
+            sample: Input sample containing conversation
         Returns:
-            Processed sample with conversation, summary and formatted text
+            Processed sample with formatted text
         """
-        conversation = self.format_conversation(sample.get("log", []))
-        summary = self.extract_summary(sample["original dialog info"])
-        return {
-            "conversation": conversation,
-            "summary": summary,
-            "text": self.generate_prompt(
-                conversation, summary if summary.strip() else None
-            ),
-        }
+        conversation = sample.get("messages", [])
+        text = self.generate_prompt(conversation)
+        return {"text": text}
+
+    def sample_dataset(self, dataset: Dataset) -> Dataset:
+        """Sample a subset of the dataset.
+        Args:
+            dataset: Input dataset to sample from
+        Returns:
+            Sampled dataset
+        """
+        total_samples = len(dataset)
+        
+        # Determine sample size
+        if self.max_samples and total_samples > self.max_samples:
+            sample_size = self.max_samples
+        elif self.min_samples and total_samples < self.min_samples:
+            raise ValueError(f"Dataset too small. Got {total_samples} samples, minimum required is {self.min_samples}")
+        else:
+            sample_size = total_samples
+            
+        print(f"Using {sample_size} samples out of {total_samples} total samples")
+        
+        # Sample the dataset
+        return dataset.shuffle(seed=self.seed).select(range(sample_size))
 
     def process_dataset(
         self, dataset: Dataset | DatasetDict, tokenize: bool = False
@@ -159,15 +170,22 @@ class Processor:
         Returns:
             Processed dataset
         """
-
         def _process(data: Dataset) -> Dataset:
-            data = (
-                data.shuffle(seed=self.seed)
-                .map(self.process_sample)
-                .remove_columns(self.COLUMNS_TO_REMOVE)
-            )
+            # Sample the dataset first
+            data = self.sample_dataset(data)
+            
+            # Process the samples
+            data = data.map(self.process_sample)
+            
             if tokenize and self.tokenizer:
-                data = data.map(lambda x: self.tokenizer(x["text"]))
+                data = data.map(
+                    lambda x: self.tokenizer(
+                        x["text"],
+                        truncation=True,
+                        max_length=2048,
+                        padding="max_length"
+                    )
+                )
             return data
 
         if isinstance(dataset, DatasetDict):
@@ -210,27 +228,54 @@ def initialize_model(model_id: str) -> AutoModelForCausalLM:
         bnb_4bit_compute_dtype=torch.bfloat16,
     )
 
-    return AutoModelForCausalLM.from_pretrained(
+    # Get the local rank for distributed training
+    local_rank = int(os.environ.get("LOCAL_RANK", 0))
+    
+    # Initialize model with proper device mapping
+    model = AutoModelForCausalLM.from_pretrained(
         model_id,
         quantization_config=bnb_config,
         trust_remote_code=True,
         use_cache=False,
-        device_map={"": "cuda:" + str(int(os.environ.get("LOCAL_RANK") or 0))},
+        device_map="auto",  # Changed from manual mapping to auto
     )
+
+    # Ensure model is in eval mode during initialization
+    model.eval()
+    
+    return model
 
 
 def main() -> None:
     """
     Main function to execute the model training pipeline.
     """
+    # Initialize distributed training if needed
+    if int(os.environ.get("LOCAL_RANK", -1)) != -1:
+        torch.distributed.init_process_group(backend="nccl")
+        torch.cuda.set_device(int(os.environ.get("LOCAL_RANK", 0)))
+
     config = Config()
 
     model = initialize_model(config.model_id)
     tokenizer = initialize_tokenizer(config.model_id)
 
-    processor = Processor(tokenizer=tokenizer)
+    processor = Processor(
+        tokenizer=tokenizer,
+        max_samples=config.max_samples,
+        min_samples=config.min_samples
+    )
+    
     dataset = load_dataset(
-        config.dataset_name, trust_remote_code=True
+        config.dataset_name,
+        split="train",
+        trust_remote_code=True
+    )
+    
+    # Split dataset into train and validation
+    dataset = dataset.train_test_split(
+        test_size=config.validation_split,
+        seed=42
     )
     processed_dataset = processor.process_dataset(dataset, tokenize=True)
 
@@ -260,11 +305,14 @@ def main() -> None:
         evaluation_strategy="steps",
         eval_steps=50,
         do_eval=True,
+        # Distributed training settings
+        local_rank=int(os.environ.get("LOCAL_RANK", -1)),
+        ddp_backend="nccl",
     )
 
     peft_config = LoraConfig(
         r=32,
-        lora_alpha=64,
+        lora_alpha=32,
         target_modules=config.lora_target_modules,
         bias="none",
         lora_dropout=0.05,
@@ -274,11 +322,68 @@ def main() -> None:
     trainer = SFTTrainer(
         model=model,
         train_dataset=processed_dataset["train"],
-        eval_dataset=processed_dataset["validation"],
+        eval_dataset=processed_dataset["test"],
         peft_config=peft_config,
+        tokenizer=tokenizer,
         args=training_args,
+        max_seq_length=2048,
+        packing=False,
     )
+
     trainer.train()
+    
+    # Save the model properly for distributed training
+    if trainer.is_world_process_zero():
+        # First save the LoRA adapter
+        trainer.model.save_pretrained(config.output_dir)
+        tokenizer.save_pretrained(config.output_dir)
+        trainer.args.save_to_json(os.path.join(config.output_dir, "training_args.json"))
+        trainer.peft_config.save_pretrained(config.output_dir)
+        
+        print(f"LoRA adapter saved to {config.output_dir}")
+        
+        # Free memory for merging weights
+        del model
+        del trainer
+        torch.cuda.empty_cache()
+        
+        # Load base model for merging
+        print("Loading base model for merging...")
+        base_model = AutoModelForCausalLM.from_pretrained(
+            config.model_id,
+            device_map="auto",
+            trust_remote_code=True,
+            torch_dtype=torch.bfloat16
+        )
+        base_model.config.use_cache = False
+        
+        # Load and merge LoRA weights
+        print("Loading and merging LoRA weights...")
+        model = PeftModel.from_pretrained(
+            base_model,
+            config.output_dir,
+            torch_dtype=torch.bfloat16
+        )
+        
+        # Merge weights
+        print("Merging weights...")
+        merged_model = model.merge_and_unload()
+        
+        # Save merged model for vLLM
+        merged_output_dir = os.path.join(config.output_dir, "merged_for_vllm")
+        print(f"Saving merged model to {merged_output_dir}...")
+        merged_model.save_pretrained(
+            merged_output_dir,
+            safe_serialization=True,  # Use safetensors for better compatibility
+            max_shard_size="10GB"  # Split into smaller files for easier handling
+        )
+        
+        # Save tokenizer with merged model
+        tokenizer.save_pretrained(merged_output_dir)
+        
+        print("Model merging and saving completed!")
+        print(f"LoRA adapter saved to: {config.output_dir}")
+        print(f"Merged model for vLLM saved to: {merged_output_dir}")
 
 
 if __name__ == "__main__":
