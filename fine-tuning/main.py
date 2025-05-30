@@ -228,33 +228,19 @@ def initialize_model(model_id: str) -> AutoModelForCausalLM:
         bnb_4bit_compute_dtype=torch.bfloat16,
     )
 
-    # Get the local rank for distributed training
-    local_rank = int(os.environ.get("LOCAL_RANK", 0))
-    
-    # Initialize model with proper device mapping
-    model = AutoModelForCausalLM.from_pretrained(
+    return AutoModelForCausalLM.from_pretrained(
         model_id,
         quantization_config=bnb_config,
         trust_remote_code=True,
         use_cache=False,
-        device_map="auto",  # Changed from manual mapping to auto
+        device_map={"": "cuda:" + str(int(os.environ.get("LOCAL_RANK") or 0))},
     )
-
-    # Ensure model is in eval mode during initialization
-    model.eval()
-    
-    return model
 
 
 def main() -> None:
     """
     Main function to execute the model training pipeline.
     """
-    # Initialize distributed training if needed
-    if int(os.environ.get("LOCAL_RANK", -1)) != -1:
-        torch.distributed.init_process_group(backend="nccl")
-        torch.cuda.set_device(int(os.environ.get("LOCAL_RANK", 0)))
-
     config = Config()
 
     model = initialize_model(config.model_id)
@@ -305,9 +291,6 @@ def main() -> None:
         evaluation_strategy="steps",
         eval_steps=50,
         do_eval=True,
-        # Distributed training settings
-        local_rank=int(os.environ.get("LOCAL_RANK", -1)),
-        ddp_backend="nccl",
     )
 
     peft_config = LoraConfig(
@@ -331,59 +314,34 @@ def main() -> None:
     )
 
     trainer.train()
-    
-    # Save the model properly for distributed training
-    if trainer.is_world_process_zero():
-        # First save the LoRA adapter
-        trainer.model.save_pretrained(config.output_dir)
-        tokenizer.save_pretrained(config.output_dir)
-        trainer.args.save_to_json(os.path.join(config.output_dir, "training_args.json"))
-        trainer.peft_config.save_pretrained(config.output_dir)
-        
-        print(f"LoRA adapter saved to {config.output_dir}")
-        
-        # Free memory for merging weights
-        del model
-        del trainer
-        torch.cuda.empty_cache()
-        
-        # Load base model for merging
-        print("Loading base model for merging...")
-        base_model = AutoModelForCausalLM.from_pretrained(
-            config.model_id,
-            device_map="auto",
-            trust_remote_code=True,
-            torch_dtype=torch.bfloat16
-        )
-        base_model.config.use_cache = False
-        
-        # Load and merge LoRA weights
-        print("Loading and merging LoRA weights...")
-        model = PeftModel.from_pretrained(
-            base_model,
-            config.output_dir,
-            torch_dtype=torch.bfloat16
-        )
-        
-        # Merge weights
-        print("Merging weights...")
-        merged_model = model.merge_and_unload()
-        
-        # Save merged model for vLLM
-        merged_output_dir = os.path.join(config.output_dir, "merged_for_vllm")
-        print(f"Saving merged model to {merged_output_dir}...")
-        merged_model.save_pretrained(
-            merged_output_dir,
-            safe_serialization=True,  # Use safetensors for better compatibility
-            max_shard_size="10GB"  # Split into smaller files for easier handling
-        )
-        
-        # Save tokenizer with merged model
-        tokenizer.save_pretrained(merged_output_dir)
-        
-        print("Model merging and saving completed!")
-        print(f"LoRA adapter saved to: {config.output_dir}")
-        print(f"Merged model for vLLM saved to: {merged_output_dir}")
+
+    trainer.save_model(config.output_dir)
+    tokenizer.save_pretrained(config.output_dir)
+    model.config.to_json_file(f"{config.output_dir}/config.json")
+    peft_config.save_pretrained(f"{config.output_dir}")
+
+    # https://github.com/vllm-project/vllm/issues/997
+    #Free memory for merging weights
+    del model
+    del trainer
+    torch.cuda.empty_cache()
+
+    # https://github.com/vllm-project/vllm/issues/997
+    # Merge Model with Adapter
+    model = AutoModelForCausalLM.from_pretrained(
+        config.model_id,
+        device_map="auto",
+        trust_remote_code=True,
+        torch_dtype=torch.bfloat16
+    )
+    model.config.use_cache = False
+    model = PeftModel.from_pretrained(
+        model, # The base model with full precision
+        config.output_dir, # Path to the finetuned adapter
+    )
+
+    model = model.merge_and_unload()
+    model.save_pretrained(os.path.join(config.output_dir, "final_merged"), safe_serialization=False)
 
 
 if __name__ == "__main__":
