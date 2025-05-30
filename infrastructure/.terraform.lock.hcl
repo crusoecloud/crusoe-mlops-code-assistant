@@ -6,6 +6,7 @@ provider "registry.terraform.io/crusoecloud/crusoe" {
   constraints = "0.5.28"
   hashes = [
     "h1:Gf49WmtiyO1FtjFGIY53/4GbMikJ8yvWyBd3JI5EIQA=",
+    "h1:fJPW0SOExIr/QVW6IgoolULhWu06VQPBu8nj2Jv1bf8=",
     "zh:119dc81e612e909f6159c48074224bed29f415e6023f1b601e9e37b031519680",
     "zh:26c183bdb0aeea884093797143d200043f8c48601b355f7a2ab34475e9e438ec",
     "zh:2a92b152e21a226d847585413c9a16671ad3771c5bc5244a415c910ab2fef7e8",

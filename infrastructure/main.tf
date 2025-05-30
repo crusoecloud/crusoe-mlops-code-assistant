@@ -21,14 +21,14 @@ resource "crusoe_kubernetes_cluster" "gpu_cluster" {
 resource "crusoe_ib_partition" "gpu_ib_partition" {
   project_id     = var.project_id
   ib_network_id  = var.ib_partition_id
-  name           = "${var.nodepool_name}-ib-partition"
+  name           = "${var.nodepool_name}-infiniband-partition"
 }
 
 resource "crusoe_kubernetes_node_pool" "gpu_nodepool" {
   project_id      = var.project_id
   name            = var.nodepool_name
   cluster_id      = crusoe_kubernetes_cluster.gpu_cluster.id
-  instance_count  = 2
+  instance_count  = 3
   type            = var.nodepool_instance_type
   ssh_key         = var.ssh_public_key
   subnet_id       = var.subnet_id
@@ -47,5 +47,5 @@ resource "crusoe_vpc_firewall_rule" "allow_connection_rules" {
   source            = each.value.address
   source_ports      = ""
   destination       = var.vpc_network_cidr
-  destination_ports = "30865,30080,30866,30870"
+  destination_ports = "30865,30080,30081,30866,30870"
 }
