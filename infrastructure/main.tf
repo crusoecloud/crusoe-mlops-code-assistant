@@ -36,11 +36,11 @@ resource "crusoe_kubernetes_node_pool" "gpu_nodepool" {
   ib_partition_id = crusoe_ib_partition.gpu_ib_partition.id
 }
 
-resource "crusoe_vpc_firewall_rule" "allow_ray_dashboard_rules" {
+resource "crusoe_vpc_firewall_rule" "allow_connection_rules" {
   project_id        = var.project_id
   for_each          = { for ip in var.whitelist_ip : ip.id => ip }
   network           = var.vpc_network_id
-  name              = "allow-ray-dashboard-${each.key}"
+  name              = "allow-connection-${each.key}"
   action            = "allow"
   direction         = "ingress"
   protocols         = "tcp"
