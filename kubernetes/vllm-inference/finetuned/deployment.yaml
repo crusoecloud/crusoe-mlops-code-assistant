@@ -1,17 +1,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: vllm-inference-deployment
-  namespace: default
+  name: vllm-inference-deployment-finetuned
+  namespace: inference
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: vllm-inference
+      app: vllm-inference-finetuned
   template:
     metadata:
       labels:
-        app: vllm-inference
+        app: vllm-inference-finetuned
     spec:
       nodeSelector:
         crusoe.ai/accelerator: nvidia-h100-80gb-sxm-ib
@@ -20,38 +20,32 @@ spec:
           image: vllm/vllm-openai:v0.9.0
           ports:
             - containerPort: 8000
-          env:
-            - name: HUGGING_FACE_HUB_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: hf-secret
-                  key: hf_api_token
-            - name: HF_HOME
-              value: /model-storage/hf-cache
           args: [
-            "--model=meta-llama/Llama-3.3-70B-Instruct",
+            "--served-model-name=novacode/novacode-0.2.3-8B",
+            "--model=/novacode-shared/finetuning-llama/results/20250530_110908",
             "--host=0.0.0.0",
             "--port=8000",
-            "--tensor-parallel-size=4"
+            "--tensor-parallel-size=1",
+            "--pipeline-parallel-size=2",
           ]
           resources:
             limits:
               cpu: "16"
               memory: "32Gi"
-              nvidia.com/gpu: "4"
+              nvidia.com/gpu: "2"
             requests:
               cpu: "16"
               memory: "32Gi"
-              nvidia.com/gpu: "4"
+              nvidia.com/gpu: "2"
           volumeMounts:
-            - name: model-store
-              mountPath: /model-storage
+            - name: novacode-shared
+              mountPath: /novacode-shared
             - mountPath: /dev/shm
               name: dshm
       volumes:
-        - name: model-store
+        - name: novacode-shared
           persistentVolumeClaim:
-            claimName: model-store
+            claimName: novacode-shared-pvc
         - name: dshm
           emptyDir:
             medium: Memory

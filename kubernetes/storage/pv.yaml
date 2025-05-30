@@ -1,0 +1,55 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: novacode-shared-pv-inference
+spec:
+  capacity:
+    storage: 1Ti
+  accessModes:
+    - ReadWriteMany
+  storageClassName: crusoe-csi-driver-ssd-sc
+  volumeMode: Filesystem
+  persistentVolumeReclaimPolicy: Retain
+  csi:
+    driver: fs.csi.crusoe.ai
+    readOnly: false
+    volumeHandle: a9890b62-7aba-4509-96c0-991e441a47e5
+    volumeAttributes:
+      csi.crusoe.ai/disk-name: novacode-shared
+      csi.crusoe.ai/serial-number: 18376BA5FA6EFC6376B
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: topology.kubernetes.io/region
+          operator: In
+          values:
+          - eu-iceland1-a
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: novacode-shared-pv-monitoring
+spec:
+  capacity:
+    storage: 1Ti
+  accessModes:
+    - ReadWriteMany
+  storageClassName: crusoe-csi-driver-ssd-sc
+  volumeMode: Filesystem
+  persistentVolumeReclaimPolicy: Retain
+  csi:
+    driver: fs.csi.crusoe.ai
+    readOnly: false
+    volumeHandle: a9890b62-7aba-4509-96c0-991e441a47e5
+    volumeAttributes:
+      csi.crusoe.ai/disk-name: novacode-shared
+      csi.crusoe.ai/serial-number: 18376BA5FA6EFC6376B
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: topology.kubernetes.io/region
+          operator: In
+          values:
+          - eu-iceland1-a

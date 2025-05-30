@@ -2,14 +2,13 @@ apiVersion: v1
 kind: Service
 metadata:
   name: vllm-inference-service
-  namespace: default
+  namespace: inference
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: vllm-inference
   ports:
     - name: http
       port: 8000
       targetPort: 8000
-      nodePort: 30081
       protocol: TCP
