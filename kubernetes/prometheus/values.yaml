@@ -33,7 +33,7 @@ grafana:
 prometheus:
   prometheusSpec:
     additionalScrapeConfigs:
-      - job_name: 'vllm-inference'
+      - job_name: 'vllm-llama'
         kubernetes_sd_configs:
           - role: endpoints
             namespaces:
@@ -42,8 +42,8 @@ prometheus:
         relabel_configs:
           - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
             action: keep
-            regex: vllm-inference-service;http
-      - job_name: 'vllm-inference-finetuned'
+            regex: vllm-llama;http
+      - job_name: 'vllm-mistral'
         kubernetes_sd_configs:
           - role: endpoints
             namespaces:
@@ -52,4 +52,4 @@ prometheus:
         relabel_configs:
           - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
             action: keep
-            regex: vllm-inference-service-finetuned;http
+            regex: vllm-mistral;http

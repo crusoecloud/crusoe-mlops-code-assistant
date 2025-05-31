@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: vllm-inference-service-finetuned
+  name: vllm-finetuned
   namespace: inference
 spec:
   type: ClusterIP
   selector:
-    app: vllm-inference-finetuned
+    app: vllm-finetuned
   ports:
     - name: http
       port: 8000

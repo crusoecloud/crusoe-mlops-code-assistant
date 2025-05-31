@@ -1,17 +1,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: vllm-inference-deployment
+  name: vllm-llama
   namespace: inference
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: vllm-inference
+      app: vllm-llama
   template:
     metadata:
       labels:
-        app: vllm-inference
+        app: vllm-llama
     spec:
       nodeSelector:
         crusoe.ai/accelerator: nvidia-h100-80gb-sxm-ib
