@@ -38,14 +38,13 @@ resource "crusoe_kubernetes_node_pool" "gpu_nodepool" {
 
 resource "crusoe_vpc_firewall_rule" "allow_connection_rules" {
   project_id        = var.project_id
-  for_each          = { for ip in var.whitelist_ip : ip.id => ip }
   network           = var.vpc_network_id
-  name              = "allow-connection-${each.key}"
+  name              = "allow-connection-nodeports"
   action            = "allow"
   direction         = "ingress"
   protocols         = "tcp"
-  source            = each.value.address
+  source            = "0.0.0.0/0"
   source_ports      = ""
   destination       = var.vpc_network_cidr
-  destination_ports = "30865,30080,30081,30866,30870"
+  destination_ports = "30080,30870"
 }
