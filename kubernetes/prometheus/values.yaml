@@ -7,7 +7,7 @@ grafana:
       org_role: Viewer
   enabled: true
   namespaceOverride: ""
-  adminPassword: admin
+  adminPassword: novacodedemo
 
   service:
     type: NodePort
