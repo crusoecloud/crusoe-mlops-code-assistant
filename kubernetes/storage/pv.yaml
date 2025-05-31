@@ -13,10 +13,9 @@ spec:
   csi:
     driver: fs.csi.crusoe.ai
     readOnly: false
-    volumeHandle: a9890b62-7aba-4509-96c0-991e441a47e5
+    volumeHandle: ${VOLUME_HANDLE}
     volumeAttributes:
-      csi.crusoe.ai/disk-name: novacode-shared
-      csi.crusoe.ai/serial-number: 18376BA5FA6EFC6376B
+      csi.crusoe.ai/serial-number: ${SERIAL_NUMBER}
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -24,7 +23,7 @@ spec:
         - key: topology.kubernetes.io/region
           operator: In
           values:
-          - eu-iceland1-a
+          - ${REGION}
 ---
 kind: PersistentVolume
 apiVersion: v1
@@ -41,10 +40,9 @@ spec:
   csi:
     driver: fs.csi.crusoe.ai
     readOnly: false
-    volumeHandle: a9890b62-7aba-4509-96c0-991e441a47e5
+    volumeHandle: ${VOLUME_HANDLE}
     volumeAttributes:
-      csi.crusoe.ai/disk-name: novacode-shared
-      csi.crusoe.ai/serial-number: 18376BA5FA6EFC6376B
+      csi.crusoe.ai/serial-number: ${SERIAL_NUMBER}
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -52,4 +50,4 @@ spec:
         - key: topology.kubernetes.io/region
           operator: In
           values:
-          - eu-iceland1-a
+          - ${REGION}

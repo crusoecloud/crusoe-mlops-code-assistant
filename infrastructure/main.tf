@@ -39,7 +39,7 @@ resource "crusoe_kubernetes_node_pool" "gpu_nodepool" {
 resource "crusoe_vpc_firewall_rule" "allow_connection_rules" {
   project_id        = var.project_id
   network           = var.vpc_network_id
-  name              = "allow-connection-nodeports"
+  name              = "allow-connection-nodeports-${var.cluster_location}"
   action            = "allow"
   direction         = "ingress"
   protocols         = "tcp"
@@ -47,4 +47,8 @@ resource "crusoe_vpc_firewall_rule" "allow_connection_rules" {
   source_ports      = ""
   destination       = var.vpc_network_cidr
   destination_ports = "30080,30870"
+}
+
+output "kubernetes_context" {
+  value = crusoe_kubernetes_cluster.gpu_cluster.name
 }

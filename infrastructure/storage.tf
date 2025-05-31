@@ -1,6 +1,6 @@
 resource "crusoe_storage_disk" "shared_disk" {
   project_id = var.project_id
-  name       = "novacode-shared"
+  name       = var.shared_disk_name
   size       = "1TiB"
   type       = "shared-volume"
   location   = var.cluster_location
