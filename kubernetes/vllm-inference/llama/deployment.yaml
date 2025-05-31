@@ -1,17 +1,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: vllm-inference-deployment
-  namespace: default
+  name: vllm-llama
+  namespace: inference
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: vllm-inference
+      app: vllm-llama
   template:
     metadata:
       labels:
-        app: vllm-inference
+        app: vllm-llama
     spec:
       nodeSelector:
         crusoe.ai/accelerator: nvidia-h100-80gb-sxm-ib
@@ -27,7 +27,7 @@ spec:
                   name: hf-secret
                   key: hf_api_token
             - name: HF_HOME
-              value: /model-storage/hf-cache
+              value: /novacode-shared/hf-cache
           args: [
             "--model=meta-llama/Llama-3.3-70B-Instruct",
             "--host=0.0.0.0",
@@ -44,14 +44,14 @@ spec:
               memory: "32Gi"
               nvidia.com/gpu: "4"
           volumeMounts:
-            - name: model-store
-              mountPath: /model-storage
+            - name: novacode-shared
+              mountPath: /novacode-shared
             - mountPath: /dev/shm
               name: dshm
       volumes:
-        - name: model-store
+        - name: novacode-shared
           persistentVolumeClaim:
-            claimName: model-store
+            claimName: novacode-shared-pvc
         - name: dshm
           emptyDir:
             medium: Memory

@@ -66,7 +66,8 @@ async function getLlamaCompletion(prompt) {
   const res = await fetch('/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'X-Model': selectedModel // Add custom header for nginx routing
     },
     body: JSON.stringify({
       model: selectedModel,

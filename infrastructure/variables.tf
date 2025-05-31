@@ -36,14 +36,6 @@ variable "cluster_location" {
   type        = string
 }
 
-variable "whitelist_ip" {
-  description = "List of IP addresses to whitelist for access."
-  type = list(object({
-    id      = string
-    address = string
-  }))
-  default = []
-}
 variable "cluster_version" {
   description = "Kubernetes version for the cluster and node pool."
   type        = string
@@ -73,4 +65,10 @@ variable "ssh_public_key" {
   description = "Public SSH key string to access nodes in the node pool."
   type        = string
   sensitive   = true
+}
+
+variable "shared_disk_name" {
+  description = "Name for the shared disk."
+  type        = string
+  default     = "novacode-shared"
 }

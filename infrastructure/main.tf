@@ -28,7 +28,7 @@ resource "crusoe_kubernetes_node_pool" "gpu_nodepool" {
   project_id      = var.project_id
   name            = var.nodepool_name
   cluster_id      = crusoe_kubernetes_cluster.gpu_cluster.id
-  instance_count  = 3
+  instance_count  = 2
   type            = var.nodepool_instance_type
   ssh_key         = var.ssh_public_key
   subnet_id       = var.subnet_id
@@ -38,14 +38,17 @@ resource "crusoe_kubernetes_node_pool" "gpu_nodepool" {
 
 resource "crusoe_vpc_firewall_rule" "allow_connection_rules" {
   project_id        = var.project_id
-  for_each          = { for ip in var.whitelist_ip : ip.id => ip }
   network           = var.vpc_network_id
-  name              = "allow-connection-${each.key}"
+  name              = "allow-connection-nodeports-${var.cluster_location}"
   action            = "allow"
   direction         = "ingress"
   protocols         = "tcp"
-  source            = each.value.address
+  source            = "0.0.0.0/0"
   source_ports      = ""
   destination       = var.vpc_network_cidr
-  destination_ports = "30865,30080,30081,30866,30870"
+  destination_ports = "30080,30870"
+}
+
+output "kubernetes_context" {
+  value = crusoe_kubernetes_cluster.gpu_cluster.name
 }

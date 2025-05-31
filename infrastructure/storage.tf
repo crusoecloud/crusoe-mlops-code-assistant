@@ -1,15 +1,15 @@
-resource "crusoe_storage_disk" "model_disk" {
+resource "crusoe_storage_disk" "shared_disk" {
   project_id = var.project_id
-  name       = "${var.cluster_name}-model-disk"
+  name       = var.shared_disk_name
   size       = "1TiB"
-  type       = "persistent-ssd"
+  type       = "shared-volume"
   location   = var.cluster_location
 }
 
 output "model_disk_id" {
-  value = crusoe_storage_disk.model_disk.id
+  value = crusoe_storage_disk.shared_disk.id
 }
 
 output "model_disk_serial_number" {
-  value = crusoe_storage_disk.model_disk.serial_number
+  value = crusoe_storage_disk.shared_disk.serial_number
 }

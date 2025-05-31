@@ -1,0 +1,55 @@
+grafana:
+  grafana.ini:
+    security:
+      allow_embedding: true
+    auth.anonymous:
+      enabled: true
+      org_role: Viewer
+  enabled: true
+  namespaceOverride: ""
+  adminPassword: novacodedemo
+
+  service:
+    type: NodePort
+    nodePort: 30870
+
+  sidecar:
+    dashboards:
+      annotations:
+        grafana_folder: "Kubernetes"
+      folderAnnotation: "grafana_folder"
+      provider:
+        foldersFromFilesStructure: true
+
+  persistence:
+    enabled: true
+    existingClaim: novacode-shared-pvc
+    accessModes:
+      - ReadWriteMany
+    size: 1Ti
+    type: pvc
+    subPath: grafana
+
+prometheus:
+  prometheusSpec:
+    additionalScrapeConfigs:
+      - job_name: 'vllm-llama'
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names:
+                - inference
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+            action: keep
+            regex: vllm-llama;http
+      - job_name: 'vllm-mistral'
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names:
+                - inference
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+            action: keep
+            regex: vllm-mistral;http

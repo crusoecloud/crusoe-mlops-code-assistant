@@ -58,4 +58,4 @@ operations/variable-scripts/variable.json
 .sentinel
 
 
-kubernetes/nova-cluster-config.yml
+kubernetes/kubeconfig.yaml
