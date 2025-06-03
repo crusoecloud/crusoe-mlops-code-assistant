@@ -66,7 +66,6 @@ module "kubernetes_resources" {
 
   depends_on = [
     crusoe_kubernetes_cluster.gpu_cluster,
-    crusoe_kubernetes_node_pool.gpu_nodepool,
     crusoe_storage_disk.shared_disk,
   ]
 }
