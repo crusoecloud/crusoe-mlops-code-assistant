@@ -38,7 +38,7 @@ resource "kubernetes_deployment" "mistral" {
       }
       spec {
         node_selector = {
-          "crusoe.ai/accelerator" = "nvidia-h100-80gb-sxm-ib"
+          "beta.kubernetes.io/instance-type" = var.gpu_instance_type
         }
         container {
           name  = "vllm"

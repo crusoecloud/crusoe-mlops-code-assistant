@@ -13,6 +13,11 @@ variable "disk_name" {
   type        = string
 }
 
+variable "gpu_instance_type" {
+  description = "The name of the instance type to use for the LLM deployments."
+  type        = string
+}
+
 variable "disk_volume_handle" {
   description = "The CSI volume handle for the shared disk."
   type        = string
