@@ -16,7 +16,7 @@ terraform {
 }
 
 locals {
-    kubeconfig_name = "${var.cluster_name}-${var.cluster_location}"
+  kubeconfig_name = "${var.cluster_name}-${var.cluster_location}"
 }
 
 data "local_file" "kubeconfig" {
@@ -39,14 +39,14 @@ provider "kubernetes" {
 provider "helm" {
   kubernetes {
     # Use the kubeconfig content directly
-  config_path    = ""
-  config_context = ""
+    config_path    = ""
+    config_context = ""
 
-  # Use the kubeconfig content directly
-  host                   = yamldecode(data.local_file.kubeconfig.content).clusters[0].cluster.server
-  client_certificate     = base64decode(yamldecode(data.local_file.kubeconfig.content).users[0].user.client-certificate-data)
-  client_key             = base64decode(yamldecode(data.local_file.kubeconfig.content).users[0].user.client-key-data)
-  cluster_ca_certificate = base64decode(yamldecode(data.local_file.kubeconfig.content).clusters[0].cluster.certificate-authority-data)
+    # Use the kubeconfig content directly
+    host                   = yamldecode(data.local_file.kubeconfig.content).clusters[0].cluster.server
+    client_certificate     = base64decode(yamldecode(data.local_file.kubeconfig.content).users[0].user.client-certificate-data)
+    client_key             = base64decode(yamldecode(data.local_file.kubeconfig.content).users[0].user.client-key-data)
+    cluster_ca_certificate = base64decode(yamldecode(data.local_file.kubeconfig.content).clusters[0].cluster.certificate-authority-data)
   }
 }
 
@@ -58,6 +58,7 @@ module "kubernetes_resources" {
   disk_name          = crusoe_storage_disk.shared_disk.name
   disk_volume_handle = crusoe_storage_disk.shared_disk.id
   disk_serial_number = crusoe_storage_disk.shared_disk.serial_number
+  gpu_instance_type  = var.nodepool_instance_type
 
   hf_token        = var.hf_token
   docker_username = var.docker_username
