@@ -113,6 +113,8 @@ You can also access the Grafana web interface (default: `30870`) at:
 http://<NODE_PUBLIC_IP>:30870
 ```
 
+There you can import the provided Grafana dashboard JSON file located in `infrastructure/kubernetes/vllm.json`.
+
 ### Notes
 
 - All infrastructure and Kubernetes resources are managed via Terraform. Avoid manual changes to prevent drift.
