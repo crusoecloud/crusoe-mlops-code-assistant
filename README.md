@@ -101,6 +101,13 @@ Find your cluster's public IP in the Crusoe Cloud dashboard and use:
 http://<NODE_PUBLIC_IP>:30080
 ```
 
+
+You can also access the Grafana web interface at:
+
+```
+http://<NODE_PUBLIC_IP>:30870
+```
+
 ### Notes
 
 - All infrastructure and Kubernetes resources are managed via Terraform. Avoid manual changes to prevent drift.
