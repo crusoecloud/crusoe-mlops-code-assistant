@@ -57,5 +57,7 @@ operations/variable-scripts/variable.json
 # Sentinel runtime directory
 .sentinel
 
+# Ignore any kubeconfig.yaml file in any directory
+**/kubeconfig.yaml
 
-kubernetes/kubeconfig.yaml
+**/secrets.tfvars

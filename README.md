@@ -4,74 +4,104 @@ This repository contains the code for NovaCode, an AI-powered development assist
 
 ## Deployment Instructions
 
+NovaCode is deployed using Terraform to provision infrastructure and Kubernetes resources.
 Follow these steps to deploy NovaCode on your Kubernetes cluster.
 
 ### Prerequisites
 
-*   Crusoe Cloud account and `crusoe` CLI configured.
-*   `kubectl` installed and configured.
-*   `helm` installed.
-*   `docker` installed.
-*   `terraform` installed.
-*   A Hugging Face API token.
+* Crusoe Cloud account and [crusoe CLI configured](https://docs.crusoecloud.com/quickstart/installing-the-cli/index.html).
+* `kubectl` installed and configured.
+* `helm` installed.
+* `docker` installed.
+* `terraform` installed.
+* A Hugging Face API token.
+* A GitHub account.
 
-### 1. Configure Hugging Face Token
+### 1. Change Directory
 
-Create a Kubernetes Secret for your Hugging Face API token. Replace `YOUR_HF_TOKEN` with your actual token.
-
-```bash
-kubectl create secret generic hf-secret --from-literal=hf_api_token='YOUR_HF_TOKEN' -n default
-```
-
-### 2. Configure GitLab Image Pull Secret
-
-Create a Kubernetes Secret for pulling Docker images from GitLab. Replace `YOUR_GITLAB_USERNAME`, `YOUR_GITLAB_PASSWORD`, and `YOUR_GITLAB_EMAIL` with your GitLab credentials.
+First, change into the `infrastructure` directory:
 
 ```bash
-kubectl create secret docker-registry gitlab-registry \
-  --docker-server=registry.gitlab.com \
-  --docker-username=YOUR_GITLAB_USERNAME \
-  --docker-password=YOUR_GITLAB_PASSWORD \
-  --docker-email=YOUR_GITLAB_EMAIL \
-  -n default
+cd infrastructure
 ```
 
-### 3. Deploy All Components
+### 2. Configure Secrets
 
-Execute the `deploy-all.sh` script to deploy the infrastructure, frontend, and Prometheus.
+Before deploying, you must configure your secrets:
+
+1. Copy the secrets.tfvars.template file:
+
+   ```bash
+   cp tfvars/secrets.tfvars.template tfvars/secrets.tfvars
+   ```
+
+2. Edit `tfvars/secrets.tfvars` and fill in your Hugging Face token and Docker registry credentials:
+
+   ```hcl
+   hf_token = "<YOUR_HF_TOKEN>"
+   docker_username = "<YOUR_DOCKER_USERNAME>"
+   docker_password = "<YOUR_DOCKER_PASSWORD>"
+   docker_email    = "<YOUR_DOCKER_EMAIL>"
+   ```
+
+### 3. Select Region and Prepare Variables
+
+Choose your deployment region (e.g., `eu-iceland1-a` or `us-east1-a`). Ensure the corresponding tfvars file exists in `tfvars/` (e.g., `eu-iceland1-a.tfvars`).
+
+### 4. Deploy Infrastructure and Kubernetes Resources
+
+Use the provided deployment script to apply or destroy the infrastructure:
 
 ```bash
-./deploy-all.sh
+./deploy.sh apply <region>
 ```
 
-This script performs the following actions:
+Replace `<region>` with your chosen region (e.g., `eu-iceland1-a`).
 
-*   **Infrastructure Deployment**:
-    *   Navigates to the `infrastructure` directory.
-    *   Applies Terraform configurations to provision the Kubernetes cluster and associated resources on Crusoe Cloud.
-*   **Kubernetes Credential Retrieval**:
-    *   Retrieves Kubernetes cluster credentials using `crusoe kubernetes clusters get-credentials`.
-*   **Frontend Deployment**:
-    *   Builds and pushes the frontend Docker image to `registry.gitlab.com/deepsense.ai/g-crusoe/crusoe-novacode/novacode-front:latest`.
-    *   Deletes and reapplies the Kubernetes frontend deployment.
-*   **Prometheus Deployment**:
-    *   Adds the `prometheus-community` Helm repository.
-    *   Installs the `kube-prometheus-stack` Helm chart with custom overrides.
-    *   Applies additional Prometheus monitoring configurations.
+This script will:
+- Validate the presence of required tfvars and secrets files.
+- Run `terraform apply` with the correct variable files and state file.
+- Provision the Crusoe Kubernetes cluster and all required resources.
 
-### 4. Verify Deployment
+**NOTE: The deployment process might time out because of the time it takes to provision the Kubernetes cluster and resources.
+If this happens, you can safely re-run the command until the deployment is successful.**
 
-After the script completes, verify that all Kubernetes pods are running:
+To destroy the infrastructure, run:
 
 ```bash
-kubectl get pods -n default
-kubectl get pods -n prometheus-system
+./deploy.sh destroy <region>
 ```
 
-Access the frontend application via the NodePort exposed by the `frontend-service`. The `nodePort` is `30080`. You can find your cluster's public IP or a node's public IP to access it.
+### 5. Retrieve Kubernetes Credentials
+
+After successful deployment, retrieve your Kubernetes credentials:
 
 ```bash
-kubectl get svc frontend-service -n default
+crusoe kubernetes clusters get-credentials <cluster-name> --region <region>
 ```
 
-The output will show the `NodePort` and the cluster IP. Use any node's public IP and the `NodePort` (e.g., `http://<NODE_PUBLIC_IP>:30080`) to access the application.
+Replace `<cluster-name>` and `<region>` with your actual values.
+
+Alternatively, you can use the infrastructure/kubernetes/kubeconfig.yaml file that is created during the deployment.
+This file contains the necessary credentials to access your Kubernetes cluster.
+
+### 6. Verify Deployment
+
+Check that all pods are running:
+
+```bash
+kubectl get pods -n inference
+kubectl get pods -n monitoring
+```
+
+Access the frontend via the NodePort exposed by the `frontend-service` (default: `30080`).
+Find your cluster's public IP in the Crusoe Cloud dashboard and use:
+
+```
+http://<NODE_PUBLIC_IP>:30080
+```
+
+### Notes
+
+- All infrastructure and Kubernetes resources are managed via Terraform. Avoid manual changes to prevent drift.
+- For customizations, edit the appropriate tfvars files or module configurations.

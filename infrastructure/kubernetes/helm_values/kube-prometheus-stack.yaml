@@ -13,6 +13,22 @@ grafana:
     type: NodePort
     nodePort: 30870
 
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: 'vllm'
+          orgId: 1
+          folder: ""
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/vllm
+
+  dashboardsConfigMaps:
+    vllm: "vllm-dashboard"
+
   sidecar:
     dashboards:
       annotations:
@@ -20,6 +36,7 @@ grafana:
       folderAnnotation: "grafana_folder"
       provider:
         foldersFromFilesStructure: true
+      searchNamespace: monitoring
 
   persistence:
     enabled: true
