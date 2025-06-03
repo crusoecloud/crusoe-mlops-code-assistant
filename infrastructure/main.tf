@@ -15,13 +15,38 @@ terraform {
   }
 }
 
+locals {
+    kubeconfig_name = "${var.cluster_name}-${var.cluster_location}"
+}
+
+data "local_file" "kubeconfig" {
+  depends_on = [crusoe_kubernetes_cluster.gpu_cluster]
+  filename   = "${path.module}/kubeconfigs/${local.kubeconfig_name}.yaml"
+}
+
 provider "kubernetes" {
-  config_path = "./kubernetes/kubeconfig.yaml"
+  # Use the kubeconfig content directly
+  config_path    = ""
+  config_context = ""
+
+  # Use the kubeconfig content directly
+  host                   = yamldecode(data.local_file.kubeconfig.content).clusters[0].cluster.server
+  client_certificate     = base64decode(yamldecode(data.local_file.kubeconfig.content).users[0].user.client-certificate-data)
+  client_key             = base64decode(yamldecode(data.local_file.kubeconfig.content).users[0].user.client-key-data)
+  cluster_ca_certificate = base64decode(yamldecode(data.local_file.kubeconfig.content).clusters[0].cluster.certificate-authority-data)
 }
 
 provider "helm" {
   kubernetes {
-    config_path = "./kubernetes/kubeconfig.yaml"
+    # Use the kubeconfig content directly
+  config_path    = ""
+  config_context = ""
+
+  # Use the kubeconfig content directly
+  host                   = yamldecode(data.local_file.kubeconfig.content).clusters[0].cluster.server
+  client_certificate     = base64decode(yamldecode(data.local_file.kubeconfig.content).users[0].user.client-certificate-data)
+  client_key             = base64decode(yamldecode(data.local_file.kubeconfig.content).users[0].user.client-key-data)
+  cluster_ca_certificate = base64decode(yamldecode(data.local_file.kubeconfig.content).clusters[0].cluster.certificate-authority-data)
   }
 }
 
