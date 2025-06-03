@@ -82,7 +82,7 @@ variable "shared_disk_name" {
 variable "docker_registry" {
   description = "The Docker registry to use for images."
   type        = string
-  default     = "registry.gitlab.com/deepsense.ai/g-crusoe/crusoe-novacode"
+  sensitive   = true
 }
 
 variable "hf_token" {
