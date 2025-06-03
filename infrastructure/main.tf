@@ -1,54 +1,47 @@
 terraform {
   required_providers {
     crusoe = {
-      source = "crusoecloud/crusoe"
-      version = "0.5.28"
+      source  = "crusoecloud/crusoe"
+      version = "0.5.29"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = ">= 2.30.0"
+    }
+    helm = {
+      source  = "hashicorp/helm"
+      version = ">= 2.13.2"
     }
   }
 }
 
-provider "crusoe" {}
-
-resource "crusoe_kubernetes_cluster" "gpu_cluster" {
-  project_id = var.project_id
-  name       = var.cluster_name
-  location   = var.cluster_location
-  version    = var.cluster_version
-  subnet_id  = var.subnet_id
-  add_ons    = ["crusoe_csi", "nvidia_gpu_operator", "nvidia_network_operator", "cluster_autoscaler"]
+provider "kubernetes" {
+  config_path = "./kubernetes/kubeconfig.yaml"
 }
 
-resource "crusoe_ib_partition" "gpu_ib_partition" {
-  project_id     = var.project_id
-  ib_network_id  = var.ib_partition_id
-  name           = "${var.nodepool_name}-infiniband-partition"
+provider "helm" {
+  kubernetes {
+    config_path = "./kubernetes/kubeconfig.yaml"
+  }
 }
 
-resource "crusoe_kubernetes_node_pool" "gpu_nodepool" {
-  project_id      = var.project_id
-  name            = var.nodepool_name
-  cluster_id      = crusoe_kubernetes_cluster.gpu_cluster.id
-  instance_count  = 2
-  type            = var.nodepool_instance_type
-  ssh_key         = var.ssh_public_key
-  subnet_id       = var.subnet_id
-  version         = var.nodepool_version
-  ib_partition_id = crusoe_ib_partition.gpu_ib_partition.id
-}
+module "kubernetes_resources" {
+  source = "./kubernetes"
 
-resource "crusoe_vpc_firewall_rule" "allow_connection_rules" {
-  project_id        = var.project_id
-  network           = var.vpc_network_id
-  name              = "allow-connection-nodeports-${var.cluster_location}"
-  action            = "allow"
-  direction         = "ingress"
-  protocols         = "tcp"
-  source            = "0.0.0.0/0"
-  source_ports      = ""
-  destination       = var.vpc_network_cidr
-  destination_ports = "30080,30870"
-}
+  docker_registry    = var.docker_registry
+  region             = var.cluster_location
+  disk_name          = crusoe_storage_disk.shared_disk.name
+  disk_volume_handle = crusoe_storage_disk.shared_disk.id
+  disk_serial_number = crusoe_storage_disk.shared_disk.serial_number
 
-output "kubernetes_context" {
-  value = crusoe_kubernetes_cluster.gpu_cluster.name
+  hf_token        = var.hf_token
+  docker_username = var.docker_username
+  docker_password = var.docker_password
+  docker_email    = var.docker_email
+
+  depends_on = [
+    crusoe_kubernetes_cluster.gpu_cluster,
+    crusoe_kubernetes_node_pool.gpu_nodepool,
+    crusoe_storage_disk.shared_disk,
+  ]
 }

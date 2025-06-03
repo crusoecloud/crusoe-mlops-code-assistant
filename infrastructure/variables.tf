@@ -55,6 +55,12 @@ variable "nodepool_name" {
   default     = "gpu-worker-pool"
 }
 
+variable "nodepool_instance_count" {
+  description = "Number of instances in the node pool."
+  type        = number
+  default     = 2
+}
+
 variable "nodepool_instance_type" {
   description = "Instance type for the node pool (e.g., 'a100.2x', 'a40.2x'). Must provide 2 or more A40 or A100 GPUs."
   type        = string
@@ -71,4 +77,34 @@ variable "shared_disk_name" {
   description = "Name for the shared disk."
   type        = string
   default     = "novacode-shared"
+}
+
+variable "docker_registry" {
+  description = "The Docker registry to use for images."
+  type        = string
+  default     = "registry.gitlab.com/deepsense.ai/g-crusoe/crusoe-novacode"
+}
+
+variable "hf_token" {
+  description = "Hugging Face API token."
+  type        = string
+  sensitive   = true
+}
+
+variable "docker_username" {
+  description = "Docker registry username."
+  type        = string
+  sensitive   = true
+}
+
+variable "docker_password" {
+  description = "Docker registry password."
+  type        = string
+  sensitive   = true
+}
+
+variable "docker_email" {
+  description = "Docker registry email."
+  type        = string
+  sensitive   = true
 }
