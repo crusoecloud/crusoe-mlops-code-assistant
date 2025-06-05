@@ -60,7 +60,7 @@ function setupChatResize() {
   });
 }
 
-async function getLlamaCompletion(prompt) {
+async function getLlamaCompletion(prompt, onChunk) {
   const selectedModel = document.getElementById('model-select').value;
   
   const res = await fetch('/v1/chat/completions', {
@@ -74,7 +74,37 @@ async function getLlamaCompletion(prompt) {
       messages: [
         {
           role: "system",
-          content: "You are an AI coding assistent that outputs ONLY code with no explanations, introductions, or outros. You will respond with pure, working code that directly solves the user's request. Your output should contain nothing but the code itself - no markdown formatting, no text descriptions, no explanations of what the code does.\n\nBefore generating any code, first determine if the request is actually asking for code generation. If the request is about:\n- Personal questions (like 'How are you?', 'What's your name?')\n- General knowledge or facts\n- Opinions or advice unrelated to programming\n- Writing essays, stories, or non-code content\n- Harmful, unethical, or illegal activities\n\nThen respond with exactly one comment: '# I can only provide programming code. I can't assist with [specific request type]. However, I'd be happy to help you with any coding problems you might have.'\n\nHere are examples that show how you should response:\nRequest: \"Write a function to check if a number is prime\"\nResponse:\ndef is_prime(n):\n    if n < 2: return False\n    for i in range(2, int(n ** 0.5) + 1):\n        if n % i == 0: return False\n    return True\n\nRequest: \"How was your day?\"\nResponse:\n# I can only provide programming code. I can't assist with personal conversations. However, I'd be happy to help you with any coding problems you might have."
+          content: `You are an AI coding assistant that outputs ONLY code with no explanations, introductions, or outros. 
+You will respond with pure, working code that directly solves the user's request. 
+Your output should contain nothing but the code itself - no markdown formatting (no \`\`\` markers), no text descriptions, no explanations of what the code does.
+
+Before generating any code, first determine if the request is actually asking for code generation. If the request is about:
+- Personal questions (like 'How are you?', 'What's your name?')
+- General knowledge or facts
+- Opinions or advice unrelated to programming
+- Writing essays, stories, or non-code content
+- Harmful, unethical, or illegal activities
+
+Then respond with exactly one comment:
+# I can only provide programming code.
+# I can't assist with [specific request type].
+# However, I'd be happy to help you with any coding problems you might have.
+
+Here are examples that show how you should response:
+
+Request: "Write a function to check if a number is prime"
+Response:
+def is_prime(n):
+    if n < 2: return False
+    for i in range(2, int(n ** 0.5) + 1):
+        if n % i == 0: return False
+    return True
+
+Request: "How was your day?"
+Response:
+# I can only provide programming code.
+# I can't assist with personal conversations.
+# However, I'd be happy to help you with any coding problems you might have.`
         },
         // Include previous chat history
         ...chatHistory.map(msg => ({
@@ -88,7 +118,7 @@ async function getLlamaCompletion(prompt) {
         }
       ],
       max_tokens: 1500,
-      stream: false
+      stream: true // Enable streaming
     })
   });
 
@@ -97,8 +127,37 @@ async function getLlamaCompletion(prompt) {
     throw new Error(`API error ${res.status}: ${errBody}`);
   }
 
-  const data = await res.json();
-  return data.choices[0].message.content;
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || ''; // Keep the last incomplete line in the buffer
+
+    for (const line of lines) {
+      if (line.trim() === '') continue;
+      if (line.trim() === 'data: [DONE]') continue;
+
+      try {
+        const jsonStr = line.replace(/^data: /, '').trim();
+        if (!jsonStr) continue;
+
+        const data = JSON.parse(jsonStr);
+        const content = data.choices[0]?.delta?.content || '';
+        
+        if (content) {
+          onChunk(content);
+        }
+      } catch (e) {
+        console.error('Error parsing streaming response:', e);
+      }
+    }
+  }
 }
 
 function addMessageToChat(role, content) {
@@ -232,17 +291,32 @@ async function generateCode() {
   codeEl.style.display = 'none';
   btn.disabled = true;
 
+  // Clear previous content
+  codeEl.innerHTML = '';
+  
+  // Create a new code element for streaming
+  const codeElement = document.createElement('code');
+  codeElement.className = 'language-python';
+  codeEl.appendChild(codeElement);
+  codeEl.style.display = 'block';
+
+  let fullCode = '';
+
   try {
-    const code = await getLlamaCompletion(prompt);
-
-    // Escape HTML
-    const escaped = code
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;');
-
-    codeEl.innerHTML = `<code class="language-python">${escaped}</code>`;
-    Prism.highlightElement(codeEl.firstChild);
+    await getLlamaCompletion(prompt, (chunk) => {
+      fullCode += chunk;
+      // Escape HTML
+      const escaped = chunk
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;');
+      
+      codeElement.innerHTML += escaped;
+      Prism.highlightElement(codeElement);
+      
+      // Auto-scroll to keep up with the streaming content
+      codeEl.scrollTop = codeEl.scrollHeight;
+    });
 
     // Update the status indicator
     updateStatus('Code generated successfully', 'success');
@@ -256,7 +330,6 @@ async function generateCode() {
     updateStatus('Error generating code', 'error');
   } finally {
     loading.style.display = 'none';
-    codeEl.style.display = 'block';
     btn.disabled = false;
 
     // Clear the prompt input
