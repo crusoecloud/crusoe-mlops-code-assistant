@@ -58,6 +58,7 @@ operations/variable-scripts/variable.json
 .sentinel
 
 # Ignore any kubeconfig.yaml file in any directory
-**/kubeconfig.yaml
+**/kubeconfigs/*.yaml
+**/kubeconfigs/*.yml
 
 **/secrets.tfvars

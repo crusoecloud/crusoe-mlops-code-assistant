@@ -35,10 +35,14 @@ Before deploying, you must configure your secrets:
    cp tfvars/secrets.tfvars.template tfvars/secrets.tfvars
    ```
 
-2. Edit `tfvars/secrets.tfvars` and fill in your Hugging Face token and Docker registry credentials:
+2. Edit `tfvars/secrets.tfvars` and fill in your SSH, Hugging Face token and Docker registry credentials:
 
    ```hcl
+   ssh_public_key = "<YOUR_SSH_PUBLIC_KEY>"
+   
    hf_token = "<YOUR_HF_TOKEN>"
+   
+   docker_registry = "<YOUR_DOCKER_REGISTRY>"
    docker_username = "<YOUR_DOCKER_USERNAME>"
    docker_password = "<YOUR_DOCKER_PASSWORD>"
    docker_email    = "<YOUR_DOCKER_EMAIL>"
@@ -46,7 +50,8 @@ Before deploying, you must configure your secrets:
 
 ### 3. Select Region and Prepare Variables
 
-Choose your deployment region (e.g., `eu-iceland1-a` or `us-east1-a`). Ensure the corresponding tfvars file exists in `tfvars/` (e.g., `eu-iceland1-a.tfvars`).
+Choose your deployment region (e.g., `eu-iceland1-a` or `us-east1-a`).
+Ensure the corresponding tfvars file exists in `tfvars/` (e.g., `eu-iceland1-a.tfvars`).
 
 ### 4. Deploy Infrastructure and Kubernetes Resources
 
@@ -82,8 +87,8 @@ crusoe kubernetes clusters get-credentials <cluster-name> --region <region>
 
 Replace `<cluster-name>` and `<region>` with your actual values.
 
-Alternatively, you can use the infrastructure/kubernetes/kubeconfig.yaml file that is created during the deployment.
-This file contains the necessary credentials to access your Kubernetes cluster.
+Alternatively, you can use the file automatically created during the deployment in infrastructure/kubeconfigs.
+It is named after `<cluster-name>` and `<region>` and it contains the necessary credentials to access the cluster.
 
 ### 6. Verify Deployment
 
@@ -102,11 +107,13 @@ http://<NODE_PUBLIC_IP>:30080
 ```
 
 
-You can also access the Grafana web interface at:
+You can also access the Grafana web interface (default: `30870`) at:
 
 ```
 http://<NODE_PUBLIC_IP>:30870
 ```
+
+There you can import the provided Grafana dashboard JSON file located in `infrastructure/kubernetes/vllm.json`.
 
 ### Notes
 

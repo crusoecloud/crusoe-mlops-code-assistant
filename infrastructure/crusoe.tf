@@ -9,7 +9,7 @@ resource "crusoe_kubernetes_cluster" "gpu_cluster" {
   add_ons    = ["crusoe_csi", "nvidia_gpu_operator", "nvidia_network_operator", "cluster_autoscaler"]
 
   provisioner "local-exec" {
-    command = "crusoe kubernetes clusters get-credentials ${self.name} --yes --kubeconfig-path=kubernetes/kubeconfig.yaml"
+    command = "crusoe kubernetes clusters get-credentials ${self.name} --yes --kubeconfig-path=kubeconfigs/${local.kubeconfig_name}.yaml"
   }
 }
 
