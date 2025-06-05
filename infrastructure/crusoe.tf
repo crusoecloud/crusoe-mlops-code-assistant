@@ -6,7 +6,7 @@ resource "crusoe_kubernetes_cluster" "gpu_cluster" {
   location   = var.cluster_location
   version    = var.cluster_version
   subnet_id  = var.subnet_id
-  add_ons    = ["crusoe_csi", "nvidia_gpu_operator", "nvidia_network_operator", "cluster_autoscaler"]
+  add_ons    = ["crusoe_csi", "nvidia_gpu_operator", "nvidia_network_operator"]
 
   provisioner "local-exec" {
     command = "crusoe kubernetes clusters get-credentials ${self.name} --yes --kubeconfig-path=kubeconfigs/${local.kubeconfig_name}.yaml"
